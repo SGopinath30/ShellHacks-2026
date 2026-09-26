@@ -1,6 +1,42 @@
-# GridLock — Control Plane
+# SYNCHRO challenge API (ASUS role)
 
-Owns `backend/`, `matching/`, `modal/` on branch `feat/control-plane`.
+The `/api/v1` API adds persistent, versioned project imports and ranked geographic opportunities. The existing `/projects` and `/matches` routes remain available for older integrations, but they use the original in-memory engine. Use `/api/v1` for the challenge demo.
+
+For a shared Railway deployment, follow [RAILWAY.md](RAILWAY.md). Public write routes can be protected with the `WRITE_API_KEY` environment variable; importers then send `X-API-Key`.
+
+## Run the challenge backend
+
+From `gridlock-control-plane/` in the `gridlock` Python environment:
+
+```bash
+python -m pip install -r requirements.txt
+docker run -d --name synchro-postgis -e POSTGRES_USER=gridlock -e POSTGRES_PASSWORD=gridlock -e POSTGRES_DB=synchro -p 127.0.0.1:55432:5432 -v synchro_pgdata:/var/lib/postgresql/data postgis/postgis:16-3.4
+python -m scripts.init_challenge_db
+python -m scripts.seed_challenge
+python -m uvicorn app.main:app --reload
+```
+
+The Docker command is needed only once; on later runs use `docker start synchro-postgis`. The database URL defaults to `postgresql://gridlock:gridlock@127.0.0.1:55432/synchro`; set `DATABASE_URL` for another PostGIS server. Open `http://127.0.0.1:8000/docs`. `/health` returns 503 if the API cannot reach PostgreSQL or compatible PostGIS (3.4+).
+
+The committed `data/fixtures/starter_projects.json` and `starter_overlaps.json` were converted from the organizer workbook. They contain ten records and six expected pairs. These are unverified fixtures, marked `is_fixture: true`; their source lacks project status and route geometry. The converter preserves `status: unknown`, treats recorded endpoint segments as approximate, and uses workbook centers only in `STARTER_COMPATIBILITY`. Fixture records may participate in analysis despite unknown status, and every response retains the fixture and quality flags. Replace them with source-backed accepted versions through `POST /api/v1/project-versions`.
+
+## Integration endpoints
+
+- `POST /api/v1/project-versions`: import a validated normalized version from Dell/Mac. Invalid coordinates, reversed or infeasible windows, and missing evidence return 422. Repeating the same payload preserves its version ID; changed payloads create a new current version.
+- `GET /api/v1/projects`: current versions; filters `utility`, `status`, `voltage`, `geometry_quality`.
+- `GET /api/v1/projects/geojson`: FeatureCollection for Lenovo, including geometry, evidence, schedule, and geometry status.
+- `GET /api/v1/opportunities`: ranked cross-utility pairs. Filters include `profile`, `utility_a`, `utility_b`, `max_distance` (meters), `timeline_filter`, `geometry_quality`, `limit`, `offset`.
+- `GET /api/v1/opportunities/{pair_id}`: both source records, distance provenance, closest points, tier, temporal relationship, and active configuration.
+
+`CHALLENGE_GEOMETRY` is the default: minimum geodesic distance between usable stored geometries, PostGIS intersections, and a strict `< 40000 m` threshold. Configure the sponsor maximum using `CHALLENGE_MAXIMUM_METERS` or a request’s `max_distance` parameter. Tiers use 1600 m and 8000 m cutoffs in `app/challenge/config.py`. `STARTER_COMPATIBILITY` uses the workbook’s explicit center points, haversine distance, and strict `< 25 international miles`; it reproduces the six organizer pairs and the workbook distances to two decimals. Timing never creates a geographic opportunity. Construction windows have confirmed/possible/no overlap; in-service milestones report a date gap only. Rank order is tier, distance, temporal strength, stable pair ID.
+
+Run the verification suite with `python -m pytest -q`. The database tests run when PostGIS is available. The older routes still implement the older rules, so the frontend should consume `/api/v1`.
+
+---
+
+# Legacy GridLock API
+
+This section documents the original in-memory API and rules. It remains available for compatibility.
 
 Deterministic spatial + temporal engine, FastAPI, and the Postgres/PostGIS
 schema. This is the "decide" half of *"LLMs extract and assist; deterministic

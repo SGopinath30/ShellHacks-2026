@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.db import repo
 from app.models import ProjectRecord
+from app.matching import compute_matches
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -27,7 +28,17 @@ def get_project(project_id: str):
 
 @router.post("", response_model=ProjectRecord)
 def upsert_project(project: ProjectRecord):
-    """Register/update a normalized project record. In the real pipeline
-    this is called by the extraction/ingestion subsystem, not directly by
-    the frontend."""
-    return repo.upsert_project(project)
+    """Register/update a normalized project record. Auto-recomputes matches
+    using this app's default thresholds after every save, so /matches stays
+    fresh without a manual /matches/recompute call."""
+    saved = repo.upsert_project(project)
+
+    all_projects = repo.list_projects()
+    matches = compute_matches(
+        all_projects,
+        spatial_threshold_miles=1.0,
+        temporal_min_overlap_days=30,
+    )
+    repo.replace_matches(matches)
+
+    return saved

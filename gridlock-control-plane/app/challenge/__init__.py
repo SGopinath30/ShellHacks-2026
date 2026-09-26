@@ -1,0 +1,1 @@
+"""Deterministic challenge-mode engine."""
