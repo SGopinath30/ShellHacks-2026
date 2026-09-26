@@ -1,1 +1,1 @@
-# ShellHacks-2026
+# Synchro
