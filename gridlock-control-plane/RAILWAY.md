@@ -3,7 +3,7 @@
 This deploys the API and a separate persistent PostGIS database. The local
 `127.0.0.1:8000` server and its Docker data do not move to Railway.
 
-1. Commit the intended backend files on `feat/control-plane` and push that
+1. Commit the intended backend files on `Kevin` and push that
    branch to the team's GitHub repository. Railway reads committed code from
    GitHub, not the uncommitted files on the Zenbook.
 
@@ -14,7 +14,7 @@ This deploys the API and a separate persistent PostGIS database. The local
    The ordinary PostgreSQL template does not include PostGIS.
 
 3. Add a second service **from the GitHub repository**. Select the branch
-   containing this backend, then set **Root Directory** to
+   `Kevin`, then set **Root Directory** to
    `/gridlock-control-plane`. Set its **Start Command** to:
 
    ```text
@@ -64,3 +64,31 @@ This deploys the API and a separate persistent PostGIS database. The local
 When `WRITE_API_KEY` is configured, all POST/PUT/PATCH/DELETE requests need
 the `X-API-Key` header. Local development remains open if this variable is
 unset. The public GET endpoints are readable without a key.
+
+## What the database migration does
+
+The PostGIS template provides a running PostgreSQL server with PostGIS installed,
+but the extension may not yet be enabled in the application database. The
+pre-deploy command `python -m scripts.init_challenge_db` reads `DATABASE_URL`
+and runs `db/challenge.sql` against that same database. The SQL enables the
+PostGIS extension, creates the `synchro` schema, creates utility, project,
+project-version, pair, review, and ingestion-job tables, and creates spatial
+GiST indexes. The statements use `IF NOT EXISTS` so rerunning the command on
+later deploys does not erase project data. It does not copy the Zenbook Docker
+volume or load the organizer fixtures.
+
+In the Railway API service, configure `DATABASE_URL` under **Variables** as a
+reference to the PostGIS service variable, using the service name Railway
+shows. Do not enter the local `127.0.0.1:55432` URL. Set the pre-deploy command
+under the API service **Settings**, then deploy the staged changes. Open the
+API service deployment logs. A successful migration prints a dictionary with
+`status: ok`, a PostGIS version, and `schema: ok`. The API `/health` endpoint
+should then return HTTP 200 with the same database status.
+
+If migration fails with `connection refused`, verify the PostGIS service is
+running and the API `DATABASE_URL` reference points to its private URL. If it
+fails with `extension postgis is not available`, the selected database image
+lacks PostGIS; use the PostGIS template. If it fails on permissions while
+creating the extension, use the database service credentials supplied by the
+template. The Railway database starts empty even when the local database has
+projects; import records after deployment.
