@@ -1,0 +1,23 @@
+{
+  "_note": "Example column names only. Inspect the actual workbook before adapting this mapping. Coordinates are explicitly longitude/latitude columns.",
+  "expected_project_count": 10,
+  "projects": [
+    {
+      "sheet": "Projects",
+      "header_row": 1,
+      "columns": {
+        "starter_id": "ID",
+        "utility": "Utility",
+        "project_name": "Project",
+        "raw_in_service_date": "In service"
+      },
+      "coordinates": {
+        "points": [
+          {"longitude": "A lon", "latitude": "A lat"},
+          {"longitude": "B lon", "latitude": "B lat"}
+        ]
+      }
+    }
+  ],
+  "overlaps": [{"sheet": "Overlaps", "header_row": 1}]
+}

@@ -1,0 +1,32 @@
+{
+  "expected_project_count": 10,
+  "expected_overlap_count": 6,
+  "projects": [{
+    "sheet": "projects",
+    "header_row": 1,
+    "columns": {
+      "starter_id": "project_id",
+      "utility": "utility",
+      "state_raw": "state",
+      "project_name": "project_name",
+      "endpoint_name_a": "name_a",
+      "endpoint_name_b": "name_b",
+      "raw_in_service_date": "in_service_date"
+    },
+    "coordinates": {"points": [
+      {"longitude": "lon_a", "latitude": "lat_a"},
+      {"longitude": "lon_b", "latitude": "lat_b"}
+    ]}
+  }],
+  "overlaps": [{
+    "sheet": "overlaps",
+    "header_row": 1,
+    "columns": {
+      "starter_overlap_id": "overlap_id",
+      "project_id_a": "project_id_a",
+      "project_id_b": "project_id_b",
+      "raw_distance_mi": "distance_mi",
+      "raw_time_gap_days": "time_gap (day)"
+    }
+  }]
+}
