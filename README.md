@@ -34,3 +34,14 @@ Run the GPU-backed Nemotron smoke test with
 `python -m modal deploy modal_nemotron.py`. A `modal run` URL is temporary and
 expires as soon as the command exits. The smoke test uses synthetic eval data;
 real extraction requires downloading and parsing a specific source document first.
+
+Frontend routes are available under `/api`:
+
+- `GET /api/projects` returns validated records stored by the current API process.
+- `POST /api/extract` accepts `{"text":"..."}`, runs extraction plus deterministic
+  validation, persists the validated record, and returns its source evidence.
+
+`/api/extract` uses an instant source-aware local mock by default. Set
+`USE_MODAL_INFERENCE=true` or pass `?use_modal_inference=true` only when a configured
+remote Nemotron endpoint should be called. The default path never starts Modal GPU
+workloads.
