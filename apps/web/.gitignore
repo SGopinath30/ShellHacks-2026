@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.env*
+!.env.example
+!lib/
+!lib/**
+test-results/
+playwright-report/
+Microsoft/Windows/PowerShell/
+public/maplibre/
+.test-fixtures/
