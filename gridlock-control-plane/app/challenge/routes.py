@@ -6,7 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Security
 from fastapi.security import APIKeyHeader
 from fastapi.responses import FileResponse, Response
 import psycopg
-from . import audit_pdf, repository, research
+from . import audit_pdf, repository, research, research_audit_pdf
 from .config import Profile, get_config
 from .contracts import ProjectInput, ProjectVersion, Quality, geometry_status
 from .decision_ledger import (DecisionRequest, ReasonUpdateRequest, append_decision,
@@ -241,3 +241,25 @@ def review_research(proposal_id: UUID, request: research.Review, _key: None = Se
         raise HTTPException(404, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
+
+
+@router.post('/research/{proposal_id}/audit-pdf', response_class=Response)
+def export_research_audit(proposal_id: UUID, request: audit_pdf.AuditExportRequest,
+                          _key: None = Security(research_key)):
+    try:
+        artifact = db_call(research_audit_pdf.export, proposal_id, request)
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return Response(
+        content=artifact.content,
+        media_type='application/pdf',
+        headers={
+            'Content-Disposition': f'attachment; filename="{artifact.filename}"',
+            'X-SYNCHRO-Audit-ID': artifact.audit_id,
+            'X-SYNCHRO-Generated-At': artifact.generated_at,
+            'X-SYNCHRO-Snapshot-SHA256': artifact.snapshot_sha256,
+            'X-SYNCHRO-PDF-SHA256': artifact.pdf_sha256,
+        },
+    )

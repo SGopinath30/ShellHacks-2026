@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ApiError, api, type VerificationInput } from './api'
+import { FileDown, LoaderCircle } from 'lucide-react'
+import { ApiError, api, exportResearchAuditPdf, type VerificationInput } from './api'
 import type { Project } from './types'
 import { safeSourceUrl } from './utils'
 import MapPanel from './MapPanel'
@@ -75,6 +76,10 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
   const [confirmed, setConfirmed] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
+  const [auditActor, setAuditActor] = useState('')
+  const [auditBusy, setAuditBusy] = useState(false)
+  const [auditError, setAuditError] = useState('')
+  const [auditSuccess, setAuditSuccess] = useState<{ auditId: string; pdfHash: string } | null>(null)
   const headers = { 'X-API-Key': accessKey }
   const current = rows.find(row => row.proposal_id === selected) ?? rows[0]
   const verification = current?.payload.verification
@@ -136,6 +141,25 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
     replace(result.proposal)
     if (action === 'APPROVE') await onSaved()
   })
+  async function downloadAudit() {
+    if (!current || !auditActor.trim()) return
+    setAuditBusy(true); setAuditError(''); setAuditSuccess(null)
+    try {
+      const result = await exportResearchAuditPdf(current.proposal_id, auditActor.trim(), accessKey)
+      const url = URL.createObjectURL(result.blob)
+      const link = document.createElement('a')
+      link.href = url; link.download = result.filename; document.body.appendChild(link); link.click(); link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setAuditSuccess({ auditId: result.auditId, pdfHash: result.pdfSha256 })
+      const data = await api<Research[]>(`/projects/${encodeURIComponent(project.project_id)}/research`, { headers })
+      setRows(data)
+    } catch (cause) {
+      const error = cause instanceof ApiError ? cause : new ApiError(0, cause instanceof Error ? cause.message : String(cause))
+      setAuditError(error.status === 401 ? 'Reviewer key missing or invalid. Enter it under Reviewer access in the header.' : error.message)
+    } finally {
+      setAuditBusy(false)
+    }
+  }
   const preview = verification ? { ...project, geometry: verification.geometry,
     geometry_origin: verification.geometry_origin, geometry_quality: 'UNRESOLVED' as const,
     location_text: verification.location_text } : null
@@ -171,6 +195,7 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
       {current.research.grounding?.searchEntryPoint?.renderedContent && <iframe title="Google Search suggestions" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerPolicy="no-referrer"
         srcDoc={current.research.grounding.searchEntryPoint.renderedContent} style={{ border: 0, width: '100%', height: 180 }} />}
       {current.research.report && <details><summary>Full research report · {current.research.model} · {current.research.retrieved_on}</summary><pre className="research-text">{current.research.report}</pre></details>}
+      {current.state !== 'RUNNING' && <section className="audit-export-card research-audit-export"><div className="audit-export-icon"><FileDown size={22} /></div><div className="audit-export-copy"><span className="detail-kicker">IMMUTABLE PROJECT SNAPSHOT</span><h3>Export Research Audit PDF</h3><p>Download the base project version, research outcome, map evidence, sources, failure status, and append-only review history exactly as saved.</p><label>Exporter / reviewer ID<input value={auditActor} onChange={event => setAuditActor(event.target.value)} placeholder="Authenticated user ID" /></label>{auditError && <div className="notice error" role="alert">{auditError}</div>}{auditSuccess && <div className="notice success" role="status"><strong>Audit {auditSuccess.auditId}</strong><span>PDF SHA-256: {auditSuccess.pdfHash || 'recorded in the audit trail'}</span></div>}<button type="button" className="button button-secondary" onClick={downloadAudit} disabled={!accessKey || !auditActor.trim() || auditBusy}>{auditBusy ? <><LoaderCircle className="spin" size={17} /> Generating audit…</> : <>Export Research Audit PDF <FileDown size={17} /></>}</button>{current.state === 'FAILED' && <small>This export records the failed run and confirms that no research evidence or project change was produced.</small>}</div></section>}
       {verification && <div><h4>Proposed changes — unverified</h4>
         <p>Status: {project.status} → {verification.status || project.status}</p>
         <p>Location: {verification.location_text}</p><p>Proposed quality: {verification.geometry_quality}</p>

@@ -4,6 +4,7 @@ The provider has no database connection, reviewer credential, or write tools.
 """
 import hashlib
 import json
+import logging
 import os
 import re
 import time
@@ -20,6 +21,9 @@ from . import repository
 from .research_gis import parcel_candidates
 from .contracts import Strict
 from .location_workbench import LocationVerificationRequest, verify_location_in_transaction
+
+
+logger = logging.getLogger(__name__)
 
 
 class DraftVerification(LocationVerificationRequest):
@@ -83,8 +87,9 @@ def expire(conn, project_id):
         WHERE project_id=%s AND state='RUNNING' AND updated_at < now()-interval '10 minutes'""", (project_id,))
 
 
-def provider_post(client, url, headers, payload):
+def provider_post(client, url, headers, payload, retry_quota=True):
     """Retry short provider demand spikes without retrying permanent failures."""
+    retryable = {502, 503, 504} | ({429} if retry_quota else set())
     for attempt in range(3):
         try:
             response = client.post(url, headers=headers, json=payload)
@@ -92,9 +97,34 @@ def provider_post(client, url, headers, payload):
             if attempt == 2:
                 raise
         else:
-            if response.status_code not in {502, 503, 504} or attempt == 2:
+            if response.status_code not in retryable or attempt == 2:
                 return response
         time.sleep(1.5 * (2 ** attempt))
+
+
+def failure_message(error):
+    """Return an actionable message without exposing provider bodies or credentials."""
+    if isinstance(error, httpx.HTTPStatusError):
+        status = error.response.status_code
+        if status == 429:
+            return ('Gemini quota is temporarily unavailable. Retry after the provider quota resets; '
+                    'no project changes were made.')
+        if status in {401, 403}:
+            return ('Gemini provider authentication is unavailable. Ask the Railway owner to verify '
+                    'GEMINI_API_KEY; no project changes were made.')
+        if status == 404:
+            return ('The configured Gemini research model is unavailable. Ask the Railway owner to '
+                    'verify GEMINI_RESEARCH_MODEL; no project changes were made.')
+        if status >= 500:
+            return ('Gemini is temporarily unavailable. Retry this saved project later; '
+                    'no project changes were made.')
+    if isinstance(error, httpx.TransportError):
+        return ('The Gemini provider could not be reached. Retry when provider connectivity returns; '
+                'no project changes were made.')
+    if isinstance(error, ValueError) and 'grounded sources' in str(error).lower():
+        return ('Research returned no usable grounded sources. Add or confirm official source URLs '
+                'before retrying; no project changes were made.')
+    return 'Research failed during provider response validation; no project changes were made.'
 
 
 def start(project_id):
@@ -155,7 +185,7 @@ Use at most five search queries. Your job is evidence research, not project veri
             'generationConfig': {'maxOutputTokens': 6000}}
         headers = {'x-goog-api-key': os.environ['GEMINI_API_KEY']}
         retrieval_mode = 'GOOGLE_SEARCH_AND_URL_CONTEXT'
-        first = provider_post(client, url, headers, first_payload)
+        first = provider_post(client, url, headers, first_payload, retry_quota=False)
         if first.status_code == 429:
             # Search grounding has a separate provider quota. Existing evidence URLs can
             # still be reviewed safely without turning an outage into an invented result.
@@ -206,12 +236,16 @@ def run(proposal_id, project):
         with repository.connect() as conn:
             conn.execute("""UPDATE synchro.research_proposals SET state='REVIEW',payload=%s,research=%s,updated_at=now()
                 WHERE proposal_id=%s AND state='RUNNING'""", (Jsonb(payload), Jsonb(research), proposal_id))
-    except Exception:
-        # Provider errors may contain URLs, credentials or source content. Never expose them.
+    except Exception as exc:
+        # Provider bodies may contain URLs, credentials or source content. Log only safe metadata.
+        status = exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else None
+        logger.warning('Research proposal %s failed: type=%s status=%s',
+                       proposal_id, type(exc).__name__, status)
+        safe_error = failure_message(exc)
         with repository.connect() as conn:
             conn.execute("""UPDATE synchro.research_proposals SET state='FAILED',
-                error='Research failed. Check provider configuration/quota and retry; no project changes were made.',updated_at=now()
-                WHERE proposal_id=%s AND state='RUNNING'""", (proposal_id,))
+                error=%s,updated_at=now()
+                WHERE proposal_id=%s AND state='RUNNING'""", (safe_error, proposal_id))
 
 
 def locked(conn, proposal_id, expected_hash):
