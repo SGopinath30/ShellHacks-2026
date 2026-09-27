@@ -10,7 +10,7 @@ The standalone backend HTML workbench remains a read-only viewer.
 Configure these variables on the backend only:
 
 - `GEMINI_API_KEY`: a Gemini API key with Google Search grounding access.
-- `GEMINI_RESEARCH_MODEL`: defaults to `gemini-2.5-flash`. Choose an available model
+- `GEMINI_RESEARCH_MODEL`: defaults to `gemini-3.8-flash`. Choose an available model
   supporting Google Search, URL context, and JSON-schema structured output.
 - `WRITE_API_KEY`: required for every research/history/edit/approval endpoint,
   even when ordinary local write routes are open.
@@ -65,7 +65,10 @@ validated with a real API key; tests use simulated provider responses.
   per hour. Each provider call has a 60-second HTTP timeout and a 6,000-token
   output cap. GIS uses two requests with 10-second timeouts. The prompt requests
   at most five searches; provider-internal query counts are not a hard server-side
-  budget. Configure provider quotas/budgets for spend control.
+  budget. Configure provider quotas/budgets for spend control. If Google Search
+  grounding reaches its separate quota, research falls back to URL Context over
+  source URLs already attached to the project and records that limited retrieval
+  mode in the proposal provenance.
 - Jobs use FastAPI background tasks, not a separate durable worker. Proposal
   records survive restarts; execution does not. RUNNING jobs older than ten
   minutes become FAILED on the next history/start request and can be restarted
