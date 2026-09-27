@@ -12,6 +12,7 @@ import {
   formatDate,
   overlapDays,
   parseCalendarDate,
+  projectDateStatus,
   resolvePair,
   resolveSelection,
 } from "./utils";
@@ -55,7 +56,8 @@ test("strict UTC calendar parsing and safe formatting", () => {
 test("geographic distance, thresholds, same utilities, and selection", () => {
   const a = { ...completeA, location: { latitude: 0, longitude: 0 } };
   const b = { ...completeB, location: { latitude: 0, longitude: 1 } };
-  assert.ok(Math.abs(distanceMiles(a, b) - 69.0934) < 0.01);
+  const distance = distanceMiles(a, b)!;
+  assert.ok(Math.abs(distance - 69.0934) < 0.01);
   assert.equal(distanceMiles(a, b), distanceMiles(b, a));
   assert.equal(distanceMiles(a, a), 0);
   const matches = buildMatches(projects);
@@ -117,6 +119,21 @@ test("geographic distance, thresholds, same utilities, and selection", () => {
   );
   assert.equal(resolveSelection("removed", []), null);
 });
+test("project schedule status is derived from the selected date and missing inputs remain unknown", () => {
+  const project = {
+    ...projects[0],
+    constructionStart: "2027-02-01",
+    constructionEnd: "2027-08-01",
+  };
+  assert.equal(projectDateStatus(project, "2027-01-01"), "planned");
+  assert.equal(projectDateStatus(project, "2027-04-15"), "active");
+  assert.equal(projectDateStatus(project, "2027-08-15"), "completed");
+  assert.equal(
+    projectDateStatus({ ...project, constructionStart: null, constructionEnd: null }, "2027-04-15"),
+    "unknown",
+  );
+});
+
 test("missing reference is explicit, never an opportunity or partial pair", () => {
   const match = buildMatches([completeA, completeB])[0];
   assert.equal(resolvePair(match, [completeA]), null);

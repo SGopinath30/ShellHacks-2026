@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test lib/matching.test.ts",
+    "test": "tsx --test lib/*.test.ts",
     "test:browser": "playwright test",
     "predev": "node scripts/copy-map-worker.mjs",
     "prebuild": "node scripts/copy-map-worker.mjs",
@@ -19,11 +19,16 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
+    "@types/three": "^0.186.0",
     "lucide-react": "^1.48.0",
     "maplibre-gl": "^6.11.2",
+    "motion": "^13.4.4",
     "next": "^16.3.6",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "three": "^0.186.1"
   },
   "private": true,
   "devDependencies": {

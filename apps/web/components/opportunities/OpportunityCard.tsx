@@ -1,6 +1,6 @@
 import { ArrowUpRight, MapPin, CalendarDays } from "lucide-react";
 import type { Match, Project } from "@/lib/types";
-import { assessMatch, utilityColor } from "@/lib/utils";
+import { assessMatch, distanceMiles, utilityColor } from "@/lib/utils";
 export default function OpportunityCard({
   match,
   projects,
@@ -23,6 +23,7 @@ export default function OpportunityCard({
         Project data unavailable — referenced project missing
       </button>
     );
+  const distance = distanceMiles(...pair);
   return (
     <button
       className={`opportunity ${selected ? "selected" : ""}`}
@@ -53,7 +54,9 @@ export default function OpportunityCard({
       <span className="card-metrics">
         <span>
           <MapPin size={13} />
-          {match.distanceMiles.toFixed(2)} mi
+          {distance === null
+            ? "Location unavailable"
+            : `${distance.toFixed(2)} mi`}
         </span>
         <span>
           <CalendarDays size={13} />

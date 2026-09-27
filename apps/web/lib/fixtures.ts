@@ -9,6 +9,7 @@ function project(
   latitude: number,
   start: string | null,
   end: string | null,
+  depthMeters: number | null = null,
 ): Project {
   return {
     id,
@@ -22,6 +23,7 @@ function project(
     constructionStart: start,
     constructionEnd: end,
     inServiceDate: end,
+    depthMeters,
     datePrecision: start ? "day" : "unknown",
     synthetic: true,
     evidence: [
@@ -58,6 +60,7 @@ export const projects: Project[] = [
     25.777,
     "2027-02-01",
     "2027-08-01",
+    4.3,
   ),
   project(
     "P02",
@@ -69,6 +72,7 @@ export const projects: Project[] = [
     25.77,
     "2027-04-01",
     "2027-10-01",
+    3.6,
   ),
   project(
     "P03",
@@ -80,6 +84,7 @@ export const projects: Project[] = [
     25.79,
     "2027-06-01",
     "2027-11-01",
+    1.8,
   ),
   project(
     "P04",
@@ -91,6 +96,7 @@ export const projects: Project[] = [
     25.753,
     "2028-01-01",
     "2028-05-01",
+    3.4,
   ),
   project(
     "P05",
@@ -100,6 +106,7 @@ export const projects: Project[] = [
     "Telecommunications",
     -80.232,
     25.779,
+    null,
     null,
     null,
   ),
@@ -113,6 +120,7 @@ export const projects: Project[] = [
     25.88,
     "2027-03-01",
     "2027-09-01",
+    3.7,
   ),
   project(
     "P07",
@@ -124,5 +132,6 @@ export const projects: Project[] = [
     25.774,
     "2027-03-01",
     "2027-07-01",
+    4.6,
   ),
 ];

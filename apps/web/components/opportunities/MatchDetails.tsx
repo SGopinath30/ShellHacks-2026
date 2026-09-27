@@ -1,5 +1,11 @@
 import type { Match, Project } from "@/lib/types";
-import { assessMatch, formatDate, utilityColor } from "@/lib/utils";
+import {
+  assessMatch,
+  distanceMiles,
+  formatDate,
+  utilityColor,
+  validLocation,
+} from "@/lib/utils";
 import ConstructionScheduleText from "../timeline/ConstructionScheduleText";
 import SourceEvidence from "../evidence/SourceEvidence";
 export default function MatchDetails({
@@ -27,6 +33,7 @@ export default function MatchDetails({
         <p>A referenced project is missing. This pair cannot be compared.</p>
       </aside>
     );
+  const distance = distanceMiles(...pair);
   return (
     <aside className="details panel">
       <div className="eyebrow">PAIR INSIGHTS</div>
@@ -47,8 +54,8 @@ export default function MatchDetails({
       <div className="detail-metrics">
         <div>
           <strong>
-            {match.distanceMiles.toFixed(2)}
-            <small> mi</small>
+            {distance === null ? "Unavailable" : distance.toFixed(2)}
+            {distance !== null && <small> mi</small>}
           </strong>
           <span>Point distance</span>
         </div>
@@ -84,14 +91,23 @@ export default function MatchDetails({
               {p.inServiceDate ? formatDate(p.inServiceDate) : "Not provided"}
             </dd>
             <dt>Location / dates</dt>
-            <dd>Approximate point / {p.datePrecision}</dd>
+            <dd>
+              {validLocation(p.location)
+                ? "Approximate point"
+                : "Location unavailable"}{" "}
+              / {p.datePrecision}
+            </dd>
           </dl>
         </article>
       ))}
       <SourceEvidence projects={pair} />
       <p className="footnote">
-        All utilities, projects, and evidence are fictional. Proximity does not
-        verify a shared corridor or feasibility.
+        {pair.every((p) => p.synthetic)
+          ? "These project records are synthetic. "
+          : pair.some((p) => p.synthetic)
+            ? "This pair includes synthetic project data. "
+            : ""}
+        Proximity does not verify a shared corridor or feasibility.
       </p>
     </aside>
   );

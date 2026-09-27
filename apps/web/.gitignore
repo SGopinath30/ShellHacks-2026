@@ -11,3 +11,4 @@ playwright-report/
 Microsoft/Windows/PowerShell/
 public/maplibre/
 .test-fixtures/
+.test-fixtures-cjs/
