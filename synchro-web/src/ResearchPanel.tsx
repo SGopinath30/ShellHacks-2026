@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, type VerificationInput } from './api'
+import { ApiError, api, type VerificationInput } from './api'
 import type { Project } from './types'
 import { safeSourceUrl } from './utils'
 import MapPanel from './MapPanel'
@@ -17,6 +17,13 @@ type Research = {
     groundingSupports?: { segment?: { text?: string }; groundingChunkIndices?: number[] }[]
     searchEntryPoint?: { renderedContent?: string }
   } }
+}
+
+function researchError(cause: unknown) {
+  if (cause instanceof ApiError && cause.status === 404) {
+    return 'Research is not available on this API deployment yet. Deploy the current backend with the research routes and database migration.'
+  }
+  return cause instanceof Error ? cause.message : String(cause)
 }
 
 function ProposalEditor({ value, onChange, baseVersion }: { value: string; onChange: (value: string) => void; baseVersion: string }) {
@@ -62,6 +69,7 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
   const [selected, setSelected] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [unavailable, setUnavailable] = useState(false)
   const [actor, setActor] = useState('')
   const [reason, setReason] = useState('')
   const [confirmed, setConfirmed] = useState(false)
@@ -74,24 +82,34 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
   const stale = current && current.base_version_id !== project.version_id
 
   useEffect(() => {
-    if (!accessKey || !live) { setRows([]); return }
+    if (!accessKey || !live) { setRows([]); setUnavailable(false); setError(''); return }
     let active = true
+    let timer: number | undefined
     const load = async () => {
       try {
         const data = await api<Research[]>(`/projects/${encodeURIComponent(project.project_id)}/research`, { headers: { 'X-API-Key': accessKey } })
-        if (active) setRows(data)
-      } catch (cause) { if (active) setError((cause as Error).message) }
+        if (active) { setRows(data); setUnavailable(false); setError('') }
+      } catch (cause) {
+        if (active) {
+          const missingRoute = cause instanceof ApiError && cause.status === 404
+          setError(researchError(cause)); setUnavailable(missingRoute)
+          if (missingRoute && timer !== undefined) window.clearInterval(timer)
+        }
+      }
     }
     void load()
-    const timer = window.setInterval(() => { void load() }, 5000)
-    return () => { active = false; window.clearInterval(timer) }
+    timer = window.setInterval(() => { void load() }, 5000)
+    return () => { active = false; if (timer !== undefined) window.clearInterval(timer) }
   }, [project.project_id, accessKey, live])
 
   useEffect(() => { setConfirmed(false); setEditing(false) }, [current?.proposal_hash])
 
   async function perform(work: () => Promise<void>) {
     setBusy(true); setError('')
-    try { await work() } catch (cause) { setError((cause as Error).message) } finally { setBusy(false) }
+    try { await work() } catch (cause) {
+      setError(researchError(cause))
+      if (cause instanceof ApiError && cause.status === 404) setUnavailable(true)
+    } finally { setBusy(false) }
   }
   function replace(row: Research) {
     setRows(previous => [row, ...previous.filter(item => item.proposal_id !== row.proposal_id)])
@@ -125,8 +143,8 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
     <h3>Research with AI</h3>
     <p>Gemini gathers public evidence and drafts a proposal. Review the actual sources before approving any changes.</p>
     {!accessKey && <p>Enter your reviewer key under Reviewer access to research or review.</p>}
-    <button className="button button-outline" disabled={!live || !accessKey || busy || rows.some(row => row.state === 'RUNNING')}
-      onClick={start}>{rows.some(row => row.state === 'RUNNING') ? 'Researching public sources…' : 'Research with Gemini'}</button>
+    <button className="button button-outline" disabled={!live || !accessKey || busy || unavailable || rows.some(row => row.state === 'RUNNING')}
+      onClick={start}>{unavailable ? 'Research API not deployed' : rows.some(row => row.state === 'RUNNING') ? 'Researching public sources…' : 'Research with Gemini'}</button>
     {error && <div className="notice error" role="alert">{error}</div>}
     {rows.length > 0 && <label>Saved research<select value={current?.proposal_id ?? ''} onChange={event => { setSelected(event.target.value); setEditing(false); setConfirmed(false) }}>
       {rows.map(row => <option key={row.proposal_id} value={row.proposal_id}>{new Date(row.created_at).toLocaleString()} · {row.state} · revision {row.revision}</option>)}
