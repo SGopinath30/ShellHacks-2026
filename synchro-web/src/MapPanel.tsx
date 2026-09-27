@@ -172,11 +172,11 @@ export default function MapPanel({ projects, compact = false }: { projects: Proj
   return (
     <div className={`map-panel ${compact ? 'map-panel-compact' : ''}`}>
       <div className="map-topline">
-        <div className="map-topline-title"><MapPin size={15} /> Regional project map</div>
-        <span className="map-scale"><Maximize2 size={13} /> Live geometry</span>
+        <div className="map-topline-title"><MapPin size={15} /> Southeast coordinate view</div>
+        <span className="map-scale"><Maximize2 size={13} /> Reference view</span>
       </div>
       <div className="map-canvas maplibre-canvas" ref={mapHost} role="img" aria-label="Interactive map of current project locations" />
-      <div className="map-footer"><span className="legend-dot" style={{ background: hasReference ? '#f1b96e' : '#72e3be' }} /> {!hasGeometry ? 'No project geometry loaded' : hasReference ? 'Reference or unresolved location' : 'Source-backed project geometry'} <span className="map-footer-note">{!hasGeometry ? 'Waiting for API records' : hasReference ? 'Location requires review' : 'Click a feature for details'}</span></div>
+      <div className="map-footer"><span className="legend-dot" style={{ background: hasReference ? '#f4b86b' : '#7be2c4' }} /> {!hasGeometry ? 'No project geometry loaded' : hasReference ? 'Reference locations' : 'Project geometry'} <span className="map-footer-note">{!hasGeometry ? 'Waiting for API records' : hasReference ? 'Site geometry needs review' : 'Source-backed geometry'}</span></div>
     </div>
   )
 }

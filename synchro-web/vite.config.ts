@@ -6,6 +6,9 @@ export default defineConfig(({ mode }) => {
   const target = env.VITE_DEV_API_TARGET || 'https://gridlock-api-production.up.railway.app'
   return {
     plugins: [react()],
+    optimizeDeps: {
+      exclude: ['maplibre-gl'],
+    },
     server: {
       proxy: {
         '/api': { target, changeOrigin: true },
