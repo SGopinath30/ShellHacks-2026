@@ -1,0 +1,47 @@
+"""Deterministic project-intelligence trust layer."""
+
+from project_intelligence.contracts import (
+    AcceptedProjectVersion,
+    AssociationState,
+    CandidateProject,
+    CanonicalProjectStatus,
+    EvidenceValue,
+    FieldEvidence,
+    GeometryAssociationStatus,
+    GeometryCandidate,
+    GeometryQuality,
+    GeometryValidation,
+    ProjectReconciliationProposal,
+    ProjectValidationOutcome,
+    ProjectValidationResult,
+    ProjectType,
+    Schedule,
+    ScheduleType,
+    SourceAccess,
+    SourceArtifact,
+    VerificationState,
+)
+from project_intelligence.validation import validate_candidate
+
+__all__ = [
+    "AcceptedProjectVersion",
+    "AssociationState",
+    "CandidateProject",
+    "CanonicalProjectStatus",
+    "EvidenceValue",
+    "FieldEvidence",
+    "GeometryAssociationStatus",
+    "GeometryCandidate",
+    "GeometryQuality",
+    "GeometryValidation",
+    "ProjectReconciliationProposal",
+    "ProjectValidationOutcome",
+    "ProjectValidationResult",
+    "ProjectType",
+    "Schedule",
+    "ScheduleType",
+    "SourceAccess",
+    "SourceArtifact",
+    "VerificationState",
+    "validate_candidate",
+]

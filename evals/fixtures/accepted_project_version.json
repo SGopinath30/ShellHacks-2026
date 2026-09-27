@@ -1,0 +1,139 @@
+{
+  "project_version_id": "PV-DEV-NORTH-RIDGE-001",
+  "project_identity": "DEV-NORTH-RIDGE-SUBSTATION",
+  "candidate": {
+    "candidate_project_id": "CP-DEV-NORTH-RIDGE",
+    "source_version_id": "SV-STARTER-DEMO",
+    "source_access": "PUBLIC",
+    "utility_id": "UTILITY-A",
+    "utility_id_evidence_ids": ["EV-DEV-UTILITY"],
+    "external_project_id": null,
+    "external_project_id_evidence_ids": [],
+    "name": {
+      "value": "North Ridge Substation Project",
+      "raw": "North Ridge Substation Project",
+      "state": "VERIFIED_RULE",
+      "evidence_ids": ["EV-DEV-NAME"]
+    },
+    "voltage_kv": {
+      "value": 115.0,
+      "raw": "115 kV",
+      "state": "VERIFIED_RULE",
+      "evidence_ids": ["EV-DEV-VOLTAGE"]
+    },
+    "status": {
+      "value": "APPROVED",
+      "raw": "Approved",
+      "state": "VERIFIED_RULE",
+      "evidence_ids": ["EV-DEV-STATUS"]
+    },
+    "project_type": {
+      "value": "SUBSTATION",
+      "raw": "Substation",
+      "state": "VERIFIED_RULE",
+      "evidence_ids": ["EV-DEV-TYPE"]
+    },
+    "schedule": {
+      "type": "IN_SERVICE_MILESTONE",
+      "raw": "12/01/2026",
+      "date": "2026-12-01",
+      "precision": "EXACT",
+      "range": null,
+      "start": null,
+      "end": null,
+      "validation": "VALID",
+      "state": "VERIFIED_RULE",
+      "evidence_ids": ["EV-DEV-SCHEDULE"]
+    },
+    "endpoints": [],
+    "state": null,
+    "county": null,
+    "geometry_candidate": null,
+    "geometry_validation": null,
+    "field_evidence": [
+      {
+        "evidence_id": "EV-DEV-UTILITY",
+        "field_path": "utility_id",
+        "source_version_id": "SV-STARTER-DEMO",
+        "locator": {"page": null, "table": null, "sheet": "Projects", "row": 2, "column": "F", "element_id": "Projects!2", "provider_feature_id": null},
+        "original_text": "UTILITY-A",
+        "normalized_value": "UTILITY-A",
+        "extraction_method": "TABLE_PARSER",
+        "validation_state": "VERIFIED_RULE",
+        "association_state": "ASSOCIATION_VERIFIED"
+      },
+      {
+        "evidence_id": "EV-DEV-NAME",
+        "field_path": "name",
+        "source_version_id": "SV-STARTER-DEMO",
+        "locator": {"page": null, "table": null, "sheet": "Projects", "row": 2, "column": "A", "element_id": "Projects!2", "provider_feature_id": null},
+        "original_text": "North Ridge Substation Project",
+        "normalized_value": "North Ridge Substation Project",
+        "extraction_method": "TABLE_PARSER",
+        "validation_state": "VERIFIED_RULE",
+        "association_state": "ASSOCIATION_VERIFIED"
+      },
+      {
+        "evidence_id": "EV-DEV-VOLTAGE",
+        "field_path": "voltage_kv",
+        "source_version_id": "SV-STARTER-DEMO",
+        "locator": {"page": null, "table": null, "sheet": "Projects", "row": 2, "column": "B", "element_id": "Projects!2", "provider_feature_id": null},
+        "original_text": "115 kV",
+        "normalized_value": 115.0,
+        "extraction_method": "TABLE_PARSER",
+        "validation_state": "VERIFIED_RULE",
+        "association_state": "ASSOCIATION_VERIFIED"
+      },
+      {
+        "evidence_id": "EV-DEV-STATUS",
+        "field_path": "status",
+        "source_version_id": "SV-STARTER-DEMO",
+        "locator": {"page": null, "table": null, "sheet": "Projects", "row": 2, "column": "C", "element_id": "Projects!2", "provider_feature_id": null},
+        "original_text": "Approved",
+        "normalized_value": "APPROVED",
+        "extraction_method": "TABLE_PARSER",
+        "validation_state": "VERIFIED_RULE",
+        "association_state": "ASSOCIATION_VERIFIED"
+      },
+      {
+        "evidence_id": "EV-DEV-TYPE",
+        "field_path": "project_type",
+        "source_version_id": "SV-STARTER-DEMO",
+        "locator": {"page": null, "table": null, "sheet": "Projects", "row": 2, "column": "D", "element_id": "Projects!2", "provider_feature_id": null},
+        "original_text": "Substation",
+        "normalized_value": "SUBSTATION",
+        "extraction_method": "TABLE_PARSER",
+        "validation_state": "VERIFIED_RULE",
+        "association_state": "ASSOCIATION_VERIFIED"
+      },
+      {
+        "evidence_id": "EV-DEV-SCHEDULE",
+        "field_path": "in_service_date",
+        "source_version_id": "SV-STARTER-DEMO",
+        "locator": {"page": null, "table": null, "sheet": "Projects", "row": 2, "column": "E", "element_id": "Projects!2", "provider_feature_id": null},
+        "original_text": "12/01/2026",
+        "normalized_value": "12/01/2026",
+        "extraction_method": "TABLE_PARSER",
+        "validation_state": "VERIFIED_RULE",
+        "association_state": "ASSOCIATION_VERIFIED"
+      }
+    ],
+    "version_state": "STARTER_DATA"
+  },
+  "validation": {
+    "candidate_project_id": "CP-DEV-NORTH-RIDGE",
+    "outcome": "ACCEPTED",
+    "field_states": {
+      "name": "VERIFIED_RULE",
+      "voltage_kv": "VERIFIED_RULE",
+      "status": "VERIFIED_RULE",
+      "project_type": "VERIFIED_RULE",
+      "schedule": "VERIFIED_RULE"
+    },
+    "issues": [],
+    "ready_for_asus": true
+  },
+  "accepted_at": "2026-09-26T00:00:00Z",
+  "accepted_by": "development-fixture",
+  "previous_version_id": null
+}

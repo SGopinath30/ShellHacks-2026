@@ -21,6 +21,7 @@ from extraction.prompts import (
     EXTRACTOR_SYSTEM_PROMPT,
     build_extraction_prompt,
 )
+from project_intelligence.source_safety import ensure_remote_inference_allowed
 
 
 ResponseT = TypeVar("ResponseT", bound=BaseModel)
@@ -57,6 +58,8 @@ class ExtractorAgent:
 
     def extract(self, chunk: DocumentChunk, *, run_id: str | None = None) -> ExtractionBatch:
         resolved_run_id = run_id or f"run-{uuid4()}"
+        if not self.mock_mode:
+            ensure_remote_inference_allowed(chunk.source_access)
         response = self.client.generate(
             system_prompt=EXTRACTOR_SYSTEM_PROMPT,
             user_prompt=build_extraction_prompt(chunk),

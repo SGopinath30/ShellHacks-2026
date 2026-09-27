@@ -213,6 +213,9 @@ tempCodeRunnerFile.py
 # Local model request/response diagnostics
 .diagnostics/
 
+# Local acquired evidence, derived artifacts, and SQLite state (may be large)
+/data/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/

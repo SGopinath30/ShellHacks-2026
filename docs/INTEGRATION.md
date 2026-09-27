@@ -155,11 +155,13 @@ service owns model inference.
 ```python
 from agents.factory import create_swarm_from_env
 from extraction.parsing import parse_document
+from project_intelligence.contracts import SourceAccess
 
 chunks = parse_document(
     "plan.pdf",
     utility_id="utility-a",
     source_id="irp-2026",
+    source_access=SourceAccess.PUBLIC,
 )
 run = create_swarm_from_env().run(chunks)
 records = [result.record for result in run.results if result.record is not None]
@@ -201,9 +203,14 @@ zero-project chunks, ambiguous schedules, tables, and duplicate project mentions
 
 ## Testing and extension points
 
-Run `pytest`. Tests cover parsing, evidence rejection, metadata correction,
+Run `python -m pytest`. Tests cover parsing, evidence rejection, metadata correction,
 orchestration, quality metrics, and API schema behavior. Model tests use an
 in-memory structured client and do not require credentials or network access.
+
+Remote extraction accepts only chunks whose `source_access` is explicitly
+`PUBLIC`. `UNKNOWN` sources require review, and `CEII` sources are rejected before
+the client is called. Local mock extraction remains available for UI development
+without a GPU.
 
 To use another model provider, implement the `StructuredClient.generate` protocol
 from `agents.extractor`. To add a parser, return `(location, text)` sections from

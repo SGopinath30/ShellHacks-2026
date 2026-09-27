@@ -15,6 +15,8 @@ from typing import Any, Optional, Self
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 from pydantic.json_schema import SkipJsonSchema
 
+from project_intelligence.contracts import SourceAccess
+
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(
@@ -78,6 +80,7 @@ class DocumentChunk(StrictModel):
     content: str = Field(min_length=1)
     source_url: HttpUrl | None = None
     document_hash: str | None = None
+    source_access: SourceAccess = SourceAccess.UNKNOWN
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

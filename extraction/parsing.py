@@ -16,6 +16,7 @@ from typing import Iterable, Literal
 
 from extraction.errors import ParsingError, SourceRetrievalError
 from extraction.models import DocumentChunk
+from project_intelligence.contracts import SourceAccess
 
 
 ChunkStrategy = Literal["paragraph", "fixed"]
@@ -29,6 +30,7 @@ def parse_document(
     utility_id: str,
     source_id: str | None = None,
     source_url: str | None = None,
+    source_access: SourceAccess = SourceAccess.UNKNOWN,
     chunk_size: int = 4_000,
     overlap: int = 200,
     strategy: ChunkStrategy = "paragraph",
@@ -46,6 +48,7 @@ def parse_document(
         utility_id=utility_id,
         source_id=source_id,
         source_url=source_url,
+        source_access=source_access,
         chunk_size=chunk_size,
         overlap=overlap,
         strategy=strategy,
@@ -59,6 +62,7 @@ def parse_bytes(
     utility_id: str,
     source_id: str | None = None,
     source_url: str | None = None,
+    source_access: SourceAccess = SourceAccess.UNKNOWN,
     chunk_size: int = 4_000,
     overlap: int = 200,
     strategy: ChunkStrategy = "paragraph",
@@ -100,6 +104,7 @@ def parse_bytes(
                     content=content,
                     source_url=source_url,
                     document_hash=document_hash,
+                    source_access=source_access,
                     metadata={"parser": suffix.lstrip("."), "chunk_strategy": strategy},
                 )
             )
