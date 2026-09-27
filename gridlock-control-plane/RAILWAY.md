@@ -3,7 +3,7 @@
 This deploys the API and a separate persistent PostGIS database. The local
 `127.0.0.1:8000` server and its Docker data do not move to Railway.
 
-1. Commit the intended backend files on `Kevin` and push that
+1. Commit the integrated backend files on `main` and push that
    branch to the team's GitHub repository. Railway reads committed code from
    GitHub, not the uncommitted files on the Zenbook.
 
@@ -14,8 +14,8 @@ This deploys the API and a separate persistent PostGIS database. The local
    The ordinary PostgreSQL template does not include PostGIS.
 
 3. Add a second service **from the GitHub repository**. Select the branch
-   `Kevin`, then set **Root Directory** to
-   `/gridlock-control-plane`. Set its **Start Command** to:
+   `main`, where the Badri, Tarun, and Kevin code is combined, then set
+   **Root Directory** to `/gridlock-control-plane`. Set its **Start Command** to:
 
    ```text
    python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -55,8 +55,9 @@ This deploys the API and a separate persistent PostGIS database. The local
      --data-binary @project.json
    ```
 
-   Confirm with `GET /api/v1/projects` and
-   `GET /api/v1/opportunities`. The Railway database starts empty; the ten
+   Confirm with `GET /api/v1/projects`, `GET /api/v1/location-review-queue`,
+   `GET /api/v1/qualified-pairs`, and `GET /api/v1/opportunities`. A 404 on either
+   review route means Railway is still serving older code. The Railway database starts empty; the ten
    local workbook fixtures are not automatically copied over. For a demo,
    open `/docs`, click **Authorize**, enter the API key, and submit a test
    project; or import verified utility records with curl.

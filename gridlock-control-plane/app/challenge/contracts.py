@@ -106,6 +106,8 @@ class ProjectInput(Strict):
     schedule: Schedule = Field(default_factory=Unknown)
     evidence: list[Evidence] = Field(min_length=1)
     source_version_ids: list[str] = Field(default_factory=list)
+    upstream_project_version_id: str | None = None
+    upstream_candidate_id: str | None = None
     is_fixture: bool = False
     extraction_confidence: float | None = Field(None, ge=0, le=1)
     extraction_model: str | None = None
