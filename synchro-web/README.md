@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL. By default, reads use the team's deployed Railway API. Set `VITE_API_BASE_URL=http://127.0.0.1:8000` to use a local `gridlock-control-plane` server. The dev server also proxies `/api` to that local service when the base URL is empty.
+Open the Vite URL. In development, the browser calls Vite on the same origin and Vite proxies `/api` and `/health` to the team's Railway API. Set `VITE_DEV_API_TARGET=http://127.0.0.1:8000` to proxy to a local `gridlock-control-plane` server instead. A nonempty `VITE_API_BASE_URL` makes the browser call that origin directly. Production builds default to the Railway API.
 
 If the page reports a connection error, check the API address shown in the message and open `https://gridlock-api-production.up.railway.app/health` from the same browser. A deployment-specific `VITE_API_BASE_URL` overrides the default at build time; set it to the API origin (with `https://`) and rebuild. Public GET requests do not send a JSON content header, avoiding an unnecessary browser preflight.
 

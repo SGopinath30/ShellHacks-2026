@@ -1,6 +1,6 @@
 import type { Ledger, LedgerEvent, Opportunity, PairAssessment, Project, QualifiedPairs, ReviewQueue } from './types'
 
-const base = (import.meta.env.VITE_API_BASE_URL ?? 'https://gridlock-api-production.up.railway.app')
+const base = (import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? '' : 'https://gridlock-api-production.up.railway.app'))
   .trim().replace(/\/+$/, '').replace(/\/api\/v1$/, '')
 
 export class ApiError extends Error {
