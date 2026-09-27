@@ -93,7 +93,6 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
         if (active) {
           const missingRoute = cause instanceof ApiError && cause.status === 404
           setError(researchError(cause)); setUnavailable(missingRoute)
-          if (missingRoute && timer !== undefined) window.clearInterval(timer)
         }
       }
     }
@@ -117,7 +116,9 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
     setConfirmed(false)
   }
   const start = () => perform(async () => {
-    replace(await api<Research>(`/projects/${encodeURIComponent(project.project_id)}/research`, { method: 'POST', headers }))
+    const row = await api<Research>(`/projects/${encodeURIComponent(project.project_id)}/research`, { method: 'POST', headers })
+    setUnavailable(false)
+    replace(row)
   })
   const save = () => perform(async () => {
     if (!current) return
@@ -143,8 +144,9 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
     <h3>Research with AI</h3>
     <p>Gemini gathers public evidence and drafts a proposal. Review the actual sources before approving any changes.</p>
     {!accessKey && <p>Enter your reviewer key under Reviewer access to research or review.</p>}
-    <button className="button button-outline" disabled={!live || !accessKey || busy || unavailable || rows.some(row => row.state === 'RUNNING')}
-      onClick={start}>{unavailable ? 'Research API not deployed' : rows.some(row => row.state === 'RUNNING') ? 'Researching public sources…' : 'Research with Gemini'}</button>
+    <button className="button button-outline" disabled={!live || !accessKey || busy || rows.some(row => row.state === 'RUNNING')}
+      onClick={start}>{busy ? 'Starting Gemini research…' : unavailable ? 'Retry Gemini research' : rows.some(row => row.state === 'RUNNING') ? 'Researching public sources…' : 'Research with Gemini'}</button>
+    {busy && <div className="notice neutral" role="status" aria-live="polite">Starting Gemini research and saving the request…</div>}
     {error && <div className="notice error" role="alert">{error}</div>}
     {rows.length > 0 && <label>Saved research<select value={current?.proposal_id ?? ''} onChange={event => { setSelected(event.target.value); setEditing(false); setConfirmed(false) }}>
       {rows.map(row => <option key={row.proposal_id} value={row.proposal_id}>{new Date(row.created_at).toLocaleString()} · {row.state} · revision {row.revision}</option>)}
