@@ -27,15 +27,20 @@ def health():
         with connect() as conn:
             version = conn.execute("SELECT PostGIS_Lib_Version() AS version").fetchone()["version"]
             schema = conn.execute("SELECT to_regclass('synchro.project_versions') AS name").fetchone()["name"]
+            decision_ledger = conn.execute("SELECT to_regclass('synchro.decision_ledger') AS name").fetchone()["name"]
+            analysis_state = conn.execute("SELECT to_regclass('synchro.opportunity_analysis_state') AS name").fetchone()["name"]
         compatible = tuple(map(int, version.split('.')[:2])) >= (3,4)
-        ready = compatible and schema is not None
+        schema_ready = all(table is not None for table in (schema,decision_ledger,analysis_state))
+        ready = compatible and schema_ready
         return {"status":"ok" if ready else "unavailable", "api":"ok", "database":"ok",
-                "postgis":version, "postgis_compatible":compatible, "schema":"ok" if schema else "missing"}
+                "postgis":version, "postgis_compatible":compatible,
+                "schema":"ok" if schema_ready else "missing"}
     except psycopg.Error:
         return {"status":"unavailable", "api":"ok", "database":"unavailable", "postgis":"unavailable"}
 
 
 def save(candidate):
+    from .decision_ledger import record_project_version_change
     payload = candidate.model_dump(mode="json")
     digest = hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(",",":")).encode()).hexdigest()[:20]
     with connect() as conn:
@@ -59,6 +64,8 @@ def save(candidate):
           (result.version_id,result.project_id,number,Jsonb(result.model_dump(mode="json")),
            candidate.geometry.model_dump_json() if candidate.geometry else None,
            candidate.validation_state == "ACCEPTED" and not candidate.is_fixture))
+        if row:
+            record_project_version_change(conn,candidate.project_id,current.version_id,result.version_id)
         return result
 
 
@@ -91,6 +98,7 @@ def spatial_candidates(conn,config):
 
 
 def opportunities(config):
+    from .decision_ledger import record_analysis
     matches = []
     with connect() as conn:
         if config.profile == Profile.CHALLENGE_GEOMETRY:
@@ -120,4 +128,5 @@ def opportunities(config):
                 matches.append(result)
                 conn.execute("INSERT INTO synchro.project_pairs VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
                              (pair_id(a.project_id,b.project_id),a.project_id,b.project_id))
+                record_analysis(conn,result)
     return sorted(matches,key=lambda m:m["rank_key"])

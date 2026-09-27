@@ -1,13 +1,24 @@
 from typing import Literal
+import hmac
+import os
 from fastapi import APIRouter, HTTPException, Query, Security
 from fastapi.security import APIKeyHeader
 import psycopg
 from . import repository
 from .config import Profile, get_config
 from .contracts import ProjectInput, ProjectVersion, Quality, geometry_status
+from .decision_ledger import (DecisionRequest, ReasonUpdateRequest, append_decision,
+                              context_hash, ledger, snapshot, update_reason)
+from uuid import UUID
 
 router = APIRouter(prefix="/api/v1", tags=["SYNCHRO challenge v1"])
 write_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def ledger_read_key(key: str | None = Security(write_key_header)):
+    configured = os.getenv("WRITE_API_KEY")
+    if configured and not hmac.compare_digest(key or "", configured):
+        raise HTTPException(401,"Invalid or missing X-API-Key")
 
 
 def db_call(function,*args):
@@ -79,5 +90,41 @@ def detail(pair_id: str,profile: Profile = Profile.CHALLENGE_GEOMETRY,
            max_distance: float | None = Query(None,gt=0,allow_inf_nan=False)):
     for result in selected(profile,max_distance):
         if result["pair_id"] == pair_id:
-            return result
+            context = snapshot(result)
+            return {**context, "decision_context_hash": context_hash(context)}
     raise HTTPException(404,"Opportunity not found under this profile and configuration")
+
+
+@router.get("/opportunities/{pair_id}/decision-ledger")
+def decision_history(pair_id: str, _key: None = Security(ledger_read_key)):
+    result = db_call(ledger,pair_id)
+    if result is None:
+        raise HTTPException(404,"Opportunity pair is unknown")
+    return result
+
+
+@router.post("/opportunities/{pair_id}/decisions",status_code=201)
+def make_decision(pair_id: str, request: DecisionRequest,
+                  profile: Profile = Profile.CHALLENGE_GEOMETRY,
+                  max_distance: float | None = Query(None,gt=0,allow_inf_nan=False),
+                  _key: str | None = Security(write_key_header)):
+    opportunity = next((r for r in selected(profile,max_distance) if r["pair_id"] == pair_id), None)
+    if opportunity is None:
+        raise HTTPException(404,"Opportunity not found under this profile and configuration")
+    try:
+        return db_call(append_decision,pair_id,opportunity,request)
+    except ValueError as exc:
+        raise HTTPException(409,str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(404,str(exc)) from exc
+
+
+@router.post("/opportunities/{pair_id}/decisions/{event_id}/reason",status_code=201)
+def revise_reason(pair_id: str,event_id: UUID,request: ReasonUpdateRequest,
+                  _key: str | None = Security(write_key_header)):
+    try:
+        return db_call(update_reason,pair_id,event_id,request)
+    except ValueError as exc:
+        raise HTTPException(409,str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(404,str(exc)) from exc

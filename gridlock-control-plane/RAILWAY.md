@@ -72,7 +72,7 @@ but the extension may not yet be enabled in the application database. The
 pre-deploy command `python -m scripts.init_challenge_db` reads `DATABASE_URL`
 and runs `db/challenge.sql` against that same database. The SQL enables the
 PostGIS extension, creates the `synchro` schema, creates utility, project,
-project-version, pair, review, and ingestion-job tables, and creates spatial
+project-version, pair, review, decision-ledger, and ingestion-job tables, and creates spatial
 GiST indexes. The statements use `IF NOT EXISTS` so rerunning the command on
 later deploys does not erase project data. It does not copy the Zenbook Docker
 volume or load the organizer fixtures.

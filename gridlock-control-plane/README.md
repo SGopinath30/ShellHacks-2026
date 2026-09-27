@@ -27,6 +27,11 @@ The committed `data/fixtures/starter_projects.json` and `starter_overlaps.json` 
 - `GET /api/v1/projects/geojson`: FeatureCollection for Lenovo, including geometry, evidence, schedule, and geometry status.
 - `GET /api/v1/opportunities`: ranked cross-utility pairs. Filters include `profile`, `utility_a`, `utility_b`, `max_distance` (meters), `timeline_filter`, `geometry_quality`, `limit`, `offset`.
 - `GET /api/v1/opportunities/{pair_id}`: both source records, distance provenance, closest points, tier, temporal relationship, and active configuration.
+- `POST /api/v1/opportunities/{pair_id}/decisions`: append a manager decision with the exact opportunity snapshot. Requires the `decision_context_hash` from opportunity detail and a reason.
+- `GET /api/v1/opportunities/{pair_id}/decision-ledger`: current review status and immutable event history.
+- `POST /api/v1/opportunities/{pair_id}/decisions/{event_id}/reason`: append an old/new reason correction while retaining the original decision.
+
+See [DECISION_LEDGER.md](DECISION_LEDGER.md) for the Lenovo page contract, actions, identity limitation, and migration. The current Impact Engine is unimplemented, so impact values are null in decision snapshots.
 
 `CHALLENGE_GEOMETRY` is the default: minimum geodesic distance between usable stored geometries, PostGIS intersections, and a strict `< 40000 m` threshold. Configure the sponsor maximum using `CHALLENGE_MAXIMUM_METERS` or a request’s `max_distance` parameter. Tiers use 1600 m and 8000 m cutoffs in `app/challenge/config.py`. `STARTER_COMPATIBILITY` uses the workbook’s explicit center points, haversine distance, and strict `< 25 international miles`; it reproduces the six organizer pairs and the workbook distances to two decimals. Timing never creates a geographic opportunity. Construction windows have confirmed/possible/no overlap; in-service milestones report a date gap only. Rank order is tier, distance, temporal strength, stable pair ID.
 
