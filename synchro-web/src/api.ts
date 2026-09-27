@@ -1,6 +1,7 @@
 import type { Ledger, LedgerEvent, Opportunity, PairAssessment, Project, QualifiedPairs, ReviewQueue } from './types'
 
-const base = (import.meta.env.VITE_API_BASE_URL ?? 'https://gridlock-api-production.up.railway.app').replace(/\/$/, '')
+const base = (import.meta.env.VITE_API_BASE_URL ?? 'https://gridlock-api-production.up.railway.app')
+  .trim().replace(/\/+$/, '').replace(/\/api\/v1$/, '')
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -10,13 +11,23 @@ export class ApiError extends Error {
 
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response
+  const url = `${base}/api/v1${path}`
+  const request = () => fetch(url, {
+    ...options,
+    headers: { ...(options?.body ? { 'Content-Type': 'application/json' } : {}), ...options?.headers },
+  })
   try {
-    response = await fetch(`${base}/api/v1${path}`, {
-      ...options,
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-    })
-  } catch {
-    throw new ApiError(0, 'The SYNCHRO API is unreachable.')
+    response = await request()
+  } catch (firstError) {
+    try {
+      if (options?.method && options.method.toUpperCase() !== 'GET') throw firstError
+      await new Promise(resolve => window.setTimeout(resolve, 500))
+      response = await request()
+    } catch (lastError) {
+      const endpoint = base || window.location.origin
+      const detail = lastError instanceof Error ? lastError.message : String(lastError)
+      throw new ApiError(0, `Cannot connect to ${endpoint}. Browser error: ${detail}. Check the API URL and this browser's network access.`)
+    }
   }
   if (!response.ok) {
     let detail = `Request failed (${response.status}).`

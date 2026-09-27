@@ -17,6 +17,8 @@ npm run dev
 
 Open the Vite URL. By default, reads use the team's deployed Railway API. Set `VITE_API_BASE_URL=http://127.0.0.1:8000` to use a local `gridlock-control-plane` server. The dev server also proxies `/api` to that local service when the base URL is empty.
 
+If the page reports a connection error, check the API address shown in the message and open `https://gridlock-api-production.up.railway.app/health` from the same browser. A deployment-specific `VITE_API_BASE_URL` overrides the default at build time; set it to the API origin (with `https://`) and rebuild. Public GET requests do not send a JSON content header, avoiding an unnecessary browser preflight.
+
 The application never substitutes preview records into live screens. If the project endpoint works but the review routes are missing, it shows the real project versions and a deployment mismatch notice; qualification and writes remain unavailable. With the current backend connected, the Location Workbench, pair comparison, qualified opportunities, evidence, and Decision Ledger use the live `/api/v1` endpoints. Example records live only in `scripts/render-fixtures.ts` for the render smoke test.
 
 `WRITE_API_KEY` remains configured on the backend and is never built into the frontend. An authorized reviewer can enter it through **Reviewer access** for protected location verification, Decision Ledger reads, and manager decisions. The key lives only in React memory for the current tab and is sent in `X-API-Key` over HTTPS. Use this on a trusted device; a shared key does not establish individual identity. The API currently accepts client-asserted actor IDs.
