@@ -26,3 +26,11 @@ npm run build
 npm run check:render
 npm run preview
 ```
+
+## AI research and human approval
+
+The Location Workbench can start Gemini research after Reviewer access is set.
+Review retrieved sources, missing evidence, proposed coordinates/status, and any
+outreach draft. Edit and save the proposal if needed, then explicitly confirm
+the evidence and approve or reject. Research alone never changes a project.
+Backend configuration and limitations: [AI_RESEARCH.md](../gridlock-control-plane/AI_RESEARCH.md).

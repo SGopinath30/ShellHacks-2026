@@ -94,7 +94,7 @@ class ProjectInput(Strict):
     utility_id: str = Field(min_length=1)
     project_name: str = Field(min_length=1)
     project_type: Literal["transmission_line", "substation", "rebuild", "upgrade", "other"]
-    status: Literal["proposed", "planned", "approved", "in_progress", "under_construction", "on_hold", "cancelled", "unknown"] = "unknown"
+    status: Literal["proposed", "planned", "approved", "in_progress", "under_construction", "on_hold", "cancelled", "completed", "operational", "unknown"] = "unknown"
     voltage_kv: float | None = Field(None, gt=0)
     location_text: str = Field(min_length=1)
     geometry: Geometry | None = None

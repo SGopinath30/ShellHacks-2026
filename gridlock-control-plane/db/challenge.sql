@@ -92,3 +92,32 @@ CREATE TABLE IF NOT EXISTS synchro.ingestion_jobs (
     metadata jsonb NOT NULL DEFAULT '{}',
     created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Research never writes project versions; a separate human approval transaction does.
+CREATE TABLE IF NOT EXISTS synchro.research_proposals (
+    proposal_id uuid PRIMARY KEY,
+    project_id text NOT NULL REFERENCES synchro.projects,
+    base_version_id text NOT NULL REFERENCES synchro.project_versions,
+    state text NOT NULL CHECK (state IN ('RUNNING','REVIEW','FAILED','REJECTED','APPLIED')),
+    revision integer NOT NULL DEFAULT 1,
+    payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+    research jsonb NOT NULL DEFAULT '{}'::jsonb,
+    error text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS research_project_created ON synchro.research_proposals(project_id,created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS research_one_running ON synchro.research_proposals(project_id) WHERE state='RUNNING';
+CREATE TABLE IF NOT EXISTS synchro.research_reviews (
+    review_id uuid PRIMARY KEY,
+    proposal_id uuid NOT NULL REFERENCES synchro.research_proposals,
+    action text NOT NULL,
+    actor_id text NOT NULL,
+    reason text NOT NULL,
+    proposal_hash text NOT NULL,
+    payload jsonb NOT NULL,
+    occurred_at timestamptz NOT NULL DEFAULT now()
+);
+DROP TRIGGER IF EXISTS research_reviews_append_only ON synchro.research_reviews;
+CREATE TRIGGER research_reviews_append_only BEFORE UPDATE OR DELETE ON synchro.research_reviews
+    FOR EACH ROW EXECUTE FUNCTION synchro.prevent_decision_ledger_mutation();

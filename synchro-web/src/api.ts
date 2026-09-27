@@ -23,6 +23,7 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     try {
       const body = await response.json()
       if (typeof body.detail === 'string') detail = body.detail
+      else if (Array.isArray(body.detail)) detail = body.detail.map((item: { loc?: (string | number)[]; msg?: string }) => `${item.loc?.join('.') ?? 'Input'}: ${item.msg ?? 'Invalid value'}`).join('; ')
     } catch { /* Keep the status message. */ }
     throw new ApiError(response.status, detail)
   }

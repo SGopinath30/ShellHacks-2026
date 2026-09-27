@@ -11,7 +11,7 @@ from .contracts import Evidence, Geometry, Line, ProjectInput, ProjectVersion, Q
 
 
 EligibleStatus = Literal["proposed", "planned", "approved", "in_progress", "under_construction",
-                         "on_hold", "cancelled", "unknown"]
+                         "on_hold", "cancelled", "completed", "operational", "unknown"]
 VerifiedOrigin = Literal["UTILITY_GIS", "PUBLIC_GIS", "OSM_MATCH", "SINGLE_LOCATED_POINT",
                          "MANUAL_VERIFIED", "TWO_ENDPOINT_SEGMENT"]
 
@@ -143,45 +143,49 @@ def qualified_pairs(opportunities,utility_a="DESC",utility_b="GPC"):
 
 def verify_location(project_id,request):
     with repository.connect() as conn:
-        current = repository.current_project(conn,project_id,lock=True)
-        if current is None:
-            raise LookupError("Project not found")
-        if current.version_id != request.base_version_id:
-            raise ValueError("Project version changed; refresh before verifying")
-        if current.is_fixture:
-            raise ValueError("Starter fixtures cannot be verified through this workflow")
-        if request.status is not None and request.status != current.status and request.status_evidence is None:
-            raise ValueError("A status change needs separate source evidence")
-        original = current.model_dump(mode="json",exclude={"version_id","version_number"})
-        evidence = [e.model_dump(mode="json") for e in current.evidence]
-        evidence.append(request.geometry_evidence.model_dump(mode="json"))
-        if request.status_evidence is not None:
-            evidence.append(request.status_evidence.model_dump(mode="json"))
-        updated = {**original,
-                   "location_text": request.location_text,
-                   "geometry": request.geometry.model_dump(mode="json"),
-                   "center_point": None,
-                   "geometry_origin": request.geometry_origin,
-                   "geometry_quality": request.geometry_quality.value,
-                   "validation_state": (Validation.NEEDS_REVIEW.value if request.geometry_quality == Quality.APPROXIMATE
-                                        else Validation.ACCEPTED.value),
-                   "status": request.status or current.status,
-                   "evidence": evidence}
-        candidate = ProjectInput.model_validate(updated)
-        result = repository.save_in_transaction(conn,candidate,expected_version_id=current.version_id)
-        if result.version_id == current.version_id:
-            raise ValueError("Verification made no change")
-        audit = conn.execute("""INSERT INTO synchro.location_verifications
-            (verification_id,project_id,from_version_id,to_version_id,actor_id,actor_role,reason,evidence)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-            RETURNING verification_id,project_id,from_version_id,to_version_id,
-                      actor_id,actor_role,reason,evidence,occurred_at""",
-            (uuid4(),project_id,current.version_id,result.version_id,request.actor_id,request.actor_role,
-             request.reason,Jsonb({"geometry":request.geometry_evidence.model_dump(mode="json"),
-                                   "status":request.status_evidence.model_dump(mode="json") if request.status_evidence else None}))).fetchone()
+        return verify_location_in_transaction(conn,project_id,request)
+
+
+def verify_location_in_transaction(conn,project_id,request):
+    current = repository.current_project(conn,project_id,lock=True)
+    if current is None:
+        raise LookupError("Project not found")
+    if current.version_id != request.base_version_id:
+        raise ValueError("Project version changed; refresh before verifying")
+    if current.is_fixture:
+        raise ValueError("Starter fixtures cannot be verified through this workflow")
+    if request.status is not None and request.status != current.status and request.status_evidence is None:
+        raise ValueError("A status change needs separate source evidence")
+    original = current.model_dump(mode="json",exclude={"version_id","version_number"})
+    evidence = [e.model_dump(mode="json") for e in current.evidence]
+    evidence.append(request.geometry_evidence.model_dump(mode="json"))
+    if request.status_evidence is not None:
+        evidence.append(request.status_evidence.model_dump(mode="json"))
+    updated = {**original,
+               "location_text": request.location_text,
+               "geometry": request.geometry.model_dump(mode="json"),
+               "center_point": None,
+               "geometry_origin": request.geometry_origin,
+               "geometry_quality": request.geometry_quality.value,
+               "validation_state": (Validation.NEEDS_REVIEW.value if request.geometry_quality == Quality.APPROXIMATE
+                                    else Validation.ACCEPTED.value),
+               "status": request.status or current.status,
+               "evidence": evidence}
+    candidate = ProjectInput.model_validate(updated)
+    result = repository.save_in_transaction(conn,candidate,expected_version_id=current.version_id)
+    if result.version_id == current.version_id:
+        raise ValueError("Verification made no change")
+    audit = conn.execute("""INSERT INTO synchro.location_verifications
+        (verification_id,project_id,from_version_id,to_version_id,actor_id,actor_role,reason,evidence)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+        RETURNING verification_id,project_id,from_version_id,to_version_id,
+                  actor_id,actor_role,reason,evidence,occurred_at""",
+        (uuid4(),project_id,current.version_id,result.version_id,request.actor_id,request.actor_role,
+         request.reason,Jsonb({"geometry":request.geometry_evidence.model_dump(mode="json"),
+                               "status":request.status_evidence.model_dump(mode="json") if request.status_evidence else None}))).fetchone()
     return {"project": result.model_dump(mode="json"),
-            "verification": {**audit,"verification_id":str(audit["verification_id"]),
-                             "occurred_at":audit["occurred_at"].isoformat()}}
+        "verification": {**audit,"verification_id":str(audit["verification_id"]),
+                         "occurred_at":audit["occurred_at"].isoformat()}}
 
 
 def verification_history(project_id):

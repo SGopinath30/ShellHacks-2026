@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ArrowRight, ArrowUpRight, CheckCircle2, Database, FileSearch, MapPin, RefreshCw, ShieldAlert, X } from 'lucide-react'
 import { ApiError, getAssessment, postVerification } from './api'
 import MapPanel from './MapPanel'
+import ResearchPanel from './ResearchPanel'
 import type { PairAssessment, Project, ReviewQueue } from './types'
 import { safeSourceUrl } from './utils'
 
@@ -77,7 +78,7 @@ function VerificationPanel({ project, live, accessKey, onClose, onSaved }: { pro
         <label>Source URL<input required type="url" value={form.sourceUrl} onChange={e => set('sourceUrl', e.target.value)} placeholder="https://…" /></label>
         <label>Page, row, or feature ID<input required value={form.sourceRow} onChange={e => set('sourceRow', e.target.value)} placeholder="Exhibit B / GIS feature 42" /></label>
         <div className="form-divider">STATUS REVIEW</div>
-        <label>Current status<select value={form.status} onChange={e => set('status', e.target.value)}><option value="">Keep {project.status}</option>{['proposed', 'planned', 'approved', 'in_progress', 'under_construction', 'on_hold', 'cancelled', 'unknown'].filter(value => value !== project.status).map(value => <option key={value} value={value}>{value.replaceAll('_', ' ')}</option>)}</select></label>
+        <label>Current status<select value={form.status} onChange={e => set('status', e.target.value)}><option value="">Keep {project.status}</option>{['proposed', 'planned', 'approved', 'in_progress', 'under_construction', 'on_hold', 'cancelled', 'completed', 'operational', 'unknown'].filter(value => value !== project.status).map(value => <option key={value} value={value}>{value.replaceAll('_', ' ')}</option>)}</select></label>
         {statusChanged && <div className="form-grid"><label>Status source ID<input required value={form.statusId} onChange={e => set('statusId', e.target.value)} /></label><label>Status source name<input required value={form.statusName} onChange={e => set('statusName', e.target.value)} /></label><label>Status source URL<input required type="url" value={form.statusUrl} onChange={e => set('statusUrl', e.target.value)} /></label><label>Supporting snippet<input required value={form.statusSnippet} onChange={e => set('statusSnippet', e.target.value)} /></label></div>}
         <p className="form-footnote">A high or authoritative geometry becomes accepted. Approximate geometry remains in review. Protected deployments require the reviewer key in the header. Reviewer identity is client asserted.</p>
         {error && <div className="notice error" role="alert">{error}</div>}
@@ -132,6 +133,7 @@ export default function Workbench({ projects, queue, maximumMeters, live, projec
         {(selected.geometry_origin === 'CENTER_POINT' || selected.geometry_quality === 'UNRESOLVED') && <div className="detail-alert"><ShieldAlert size={18} /><p>This coordinate is a reference location or unresolved geometry. It has not been confirmed as the {selected.project_name} site.</p></div>}
         <h3 className="detail-subhead">Source evidence</h3><SourceList project={selected} />
         <button className="button button-primary detail-action" onClick={() => setVerify(true)} disabled={!live}>Verify project location <ArrowRight size={17} /></button>
+        <ResearchPanel key={selected.project_id} project={selected} accessKey={accessKey} live={live} onSaved={onReload} />
       </motion.div> : <div className="empty-state"><MapPin size={30} /><strong>Select a project</strong><span>Its review blockers and source evidence will appear here.</span></div>}</AnimatePresence></section>
     </div>
     <section className="comparison-section"><div className="panel-head"><div><span className="eyebrow dark">DISTANCE EXPLAINED</span><h2>Compare two records</h2><p>See exactly what the current coordinates can and cannot establish.</p></div></div>

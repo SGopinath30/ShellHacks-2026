@@ -93,3 +93,11 @@ lacks PostGIS; use the PostGIS template. If it fails on permissions while
 creating the extension, use the database service credentials supplied by the
 template. The Railway database starts empty even when the local database has
 projects; import records after deployment.
+
+## Optional Gemini research
+
+Set backend-only `GEMINI_API_KEY`, optional `GEMINI_RESEARCH_MODEL` (default
+`gemini-2.5-flash`), and `WRITE_API_KEY`. The existing pre-deploy command also
+creates the research proposal and review tables. Deploy the updated
+`synchro-web` frontend to use research and human approval controls. See
+[AI_RESEARCH.md](AI_RESEARCH.md) for job recovery, provider quotas and review rules.

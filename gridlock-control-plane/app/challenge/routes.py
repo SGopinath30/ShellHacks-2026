@@ -2,11 +2,11 @@ from typing import Literal
 import hmac
 import os
 from pathlib import Path
-from fastapi import APIRouter, HTTPException, Query, Security
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Security
 from fastapi.security import APIKeyHeader
 from fastapi.responses import FileResponse
 import psycopg
-from . import repository
+from . import repository, research
 from .config import Profile, get_config
 from .contracts import ProjectInput, ProjectVersion, Quality, geometry_status
 from .decision_ledger import (DecisionRequest, ReasonUpdateRequest, append_decision,
@@ -180,3 +180,42 @@ def revise_reason(pair_id: str,event_id: UUID,request: ReasonUpdateRequest,
         raise HTTPException(409,str(exc)) from exc
     except LookupError as exc:
         raise HTTPException(404,str(exc)) from exc
+
+
+# Research endpoints require a configured reviewer key, including in local mode.
+# The Gemini provider receives neither this key nor any write tools.
+
+
+def research_key(key: str | None = Security(write_key_header)):
+    configured = os.getenv('WRITE_API_KEY')
+    if not configured:
+        raise HTTPException(503, 'Configure WRITE_API_KEY before enabling research and approval')
+    if not hmac.compare_digest(key or '', configured):
+        raise HTTPException(401, 'Invalid or missing reviewer key')
+
+
+@router.post('/projects/{project_id}/research', status_code=202)
+def start_research(project_id: str, tasks: BackgroundTasks, _key: None = Security(research_key)):
+    proposal, project = db_call(research.start, project_id)
+    tasks.add_task(research.run, proposal['proposal_id'], project)
+    return proposal
+
+
+@router.get('/projects/{project_id}/research')
+def research_history(project_id: str, _key: None = Security(research_key)):
+    return db_call(research.history, project_id)
+
+
+@router.put('/research/{proposal_id}')
+def edit_research(proposal_id: UUID, request: research.Revision, _key: None = Security(research_key)):
+    return db_call(research.revise, proposal_id, request)
+
+
+@router.post('/research/{proposal_id}/review')
+def review_research(proposal_id: UUID, request: research.Review, _key: None = Security(research_key)):
+    try:
+        return db_call(research.decide, proposal_id, request)
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
