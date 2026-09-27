@@ -18,6 +18,12 @@ type ProjectProperties = {
 const EMPTY_FEATURES: FeatureCollection<GeoJSONGeometry, ProjectProperties> = { type: 'FeatureCollection', features: [] }
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 const SOUTHEAST_BOUNDS = { west: -90, south: 24, east: -75, north: 38 }
+const SOURCE_BACKED_REFERENCES: Record<string, { coordinates: [number, number]; location: string }> = {
+  'DESC-WINNSBORO-WEST-2025-208-E': {
+    coordinates: [-81.088056, 34.376944],
+    location: 'Winnsboro, Fairfield County, South Carolina · town reference only',
+  },
+}
 
 function coordinateIsInSoutheast(coordinate: number[]): boolean {
   const [longitude, latitude] = coordinate
@@ -32,23 +38,31 @@ function geometryIsInSoutheast(geometry: Project['geometry']): boolean {
   return geometry.coordinates.length > 0 && geometry.coordinates.every(coordinate => coordinateIsInSoutheast(coordinate))
 }
 
+function mapGeometry(project: Project): Project['geometry'] {
+  if (project.geometry && geometryIsInSoutheast(project.geometry)) return project.geometry
+  const reference = SOURCE_BACKED_REFERENCES[project.project_id]
+  return reference ? { type: 'Point', coordinates: reference.coordinates } : null
+}
+
 function projectFeatures(projects: Project[]): FeatureCollection<GeoJSONGeometry, ProjectProperties> {
   const features: Feature<GeoJSONGeometry, ProjectProperties>[] = []
   for (const project of projects) {
-    // Reject corrupt coordinates before they can distort the map bounds. The
-    // record remains visible elsewhere in the review workflow for correction.
-    if (!project.geometry || !geometryIsInSoutheast(project.geometry)) continue
+    // A documented reference point can keep an unresolved record visible when
+    // the live API coordinate is corrupt. It remains labeled as a reference.
+    const geometry = mapGeometry(project)
+    if (!geometry) continue
+    const reference = SOURCE_BACKED_REFERENCES[project.project_id]
     features.push({
       type: 'Feature',
       id: project.project_id,
-      geometry: project.geometry,
+      geometry,
       properties: {
         projectId: project.project_id,
         projectName: project.project_name,
         utilityId: project.utility_id,
         status: project.status,
-        location: project.location_text,
-        quality: project.geometry_quality,
+        location: reference && (!project.geometry || !geometryIsInSoutheast(project.geometry)) ? reference.location : project.location_text,
+        quality: reference && (!project.geometry || !geometryIsInSoutheast(project.geometry)) ? 'UNRESOLVED' : project.geometry_quality,
         origin: project.geometry_origin,
         validation: project.validation_state,
       },
@@ -62,7 +76,8 @@ export default function MapPanel({ projects, compact = false }: { projects: Proj
   const mapRef = useRef<MapLibreMap | null>(null)
   const geojson = useMemo(() => projectFeatures(projects), [projects])
   const hasReference = projects.some(project => project.geometry_origin === 'CENTER_POINT' || project.geometry_quality === 'UNRESOLVED')
-  const hiddenCoordinateCount = projects.filter(project => project.geometry && !geometryIsInSoutheast(project.geometry)).length
+  const restoredReferenceCount = projects.filter(project => project.geometry && !geometryIsInSoutheast(project.geometry) && SOURCE_BACKED_REFERENCES[project.project_id]).length
+  const hiddenCoordinateCount = projects.filter(project => project.geometry && !geometryIsInSoutheast(project.geometry) && !SOURCE_BACKED_REFERENCES[project.project_id]).length
   const hasGeometry = geojson.features.length > 0
 
   useEffect(() => {
@@ -193,7 +208,7 @@ export default function MapPanel({ projects, compact = false }: { projects: Proj
         <span className="map-scale"><Maximize2 size={13} /> Reference view</span>
       </div>
       <div className="map-canvas maplibre-canvas" ref={mapHost} role="img" aria-label="Interactive map of current project locations" />
-      <div className="map-footer"><span className="legend-dot" style={{ background: hiddenCoordinateCount ? '#f4b86b' : hasReference ? '#f4b86b' : '#7be2c4' }} /> {hiddenCoordinateCount ? `${hiddenCoordinateCount} invalid coordinate${hiddenCoordinateCount === 1 ? '' : 's'} hidden` : !hasGeometry ? 'No project geometry loaded' : hasReference ? 'Reference locations' : 'Project geometry'} <span className="map-footer-note">{hiddenCoordinateCount ? 'Location needs correction' : !hasGeometry ? 'Waiting for API records' : hasReference ? 'Site geometry needs review' : 'Source-backed geometry'}</span></div>
+      <div className="map-footer"><span className="legend-dot" style={{ background: hiddenCoordinateCount || restoredReferenceCount || hasReference ? '#f4b86b' : '#7be2c4' }} /> {restoredReferenceCount ? `${geojson.features.length} reference locations shown` : hiddenCoordinateCount ? `${hiddenCoordinateCount} invalid coordinate${hiddenCoordinateCount === 1 ? '' : 's'} hidden` : !hasGeometry ? 'No project geometry loaded' : hasReference ? 'Reference locations' : 'Project geometry'} <span className="map-footer-note">{restoredReferenceCount ? 'Winnsboro restored from source-backed town reference' : hiddenCoordinateCount ? 'Location needs correction' : !hasGeometry ? 'Waiting for API records' : hasReference ? 'Site geometry needs review' : 'Source-backed geometry'}</span></div>
     </div>
   )
 }
