@@ -55,7 +55,7 @@ CREATE INDEX IF NOT EXISTS decision_ledger_pair_time
 CREATE OR REPLACE FUNCTION synchro.prevent_decision_ledger_mutation()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-    RAISE EXCEPTION 'Decision Ledger events are append-only';
+    RAISE EXCEPTION 'Audit records are append-only';
 END;
 $$;
 DROP TRIGGER IF EXISTS decision_ledger_append_only ON synchro.decision_ledger;
@@ -68,6 +68,24 @@ CREATE TABLE IF NOT EXISTS synchro.opportunity_analysis_state (
     context_hash text NOT NULL,
     PRIMARY KEY (pair_id, configuration_hash)
 );
+CREATE TABLE IF NOT EXISTS synchro.location_verifications (
+    verification_id uuid PRIMARY KEY,
+    project_id text NOT NULL REFERENCES synchro.projects,
+    from_version_id text NOT NULL REFERENCES synchro.project_versions,
+    to_version_id text NOT NULL REFERENCES synchro.project_versions,
+    actor_id text NOT NULL,
+    actor_role text NOT NULL,
+    reason text NOT NULL,
+    evidence jsonb NOT NULL,
+    occurred_at timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (project_id, to_version_id)
+);
+CREATE INDEX IF NOT EXISTS location_verifications_project_time
+    ON synchro.location_verifications (project_id, occurred_at DESC);
+DROP TRIGGER IF EXISTS location_verifications_append_only ON synchro.location_verifications;
+CREATE TRIGGER location_verifications_append_only
+    BEFORE UPDATE OR DELETE ON synchro.location_verifications
+    FOR EACH ROW EXECUTE FUNCTION synchro.prevent_decision_ledger_mutation();
 CREATE TABLE IF NOT EXISTS synchro.ingestion_jobs (
     job_id text PRIMARY KEY,
     status text NOT NULL,

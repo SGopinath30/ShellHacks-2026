@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SYNCHRO | Location Workbench</title>
+  <style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #17313c; background: #f3f6f5; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { background: #092e3b; color: white; padding: 28px max(24px, calc((100vw - 1200px)/2)); }
+    header small { color: #7fd7bb; font-weight: 700; letter-spacing: .15em; }
+    h1 { margin: 8px 0 6px; font-size: clamp(26px, 3vw, 36px); }
+    header p { margin: 0; max-width: 700px; color: #c7d8dd; line-height: 1.5; }
+    main { max-width: 1248px; margin: 0 auto; padding: 26px 24px 64px; display: grid; gap: 22px; }
+    section { background: white; border: 1px solid #dce6e6; border-radius: 14px; box-shadow: 0 7px 24px #1139470a; padding: 22px; }
+    .section-head { display: flex; justify-content: space-between; align-items: start; gap: 18px; flex-wrap: wrap; }
+    h2 { margin: 0 0 6px; font-size: 20px; }
+    .muted { color: #5a6f76; font-size: 14px; line-height: 1.5; }
+    .section-head p { margin: 0 0 18px; }
+    .pill { display: inline-block; border-radius: 100px; padding: 5px 10px; font-size: 12px; font-weight: 700; }
+    .pill.warn { color: #86510d; background: #fff1d7; }
+    .pill.good { color: #116048; background: #dbf6e9; }
+    .pill.dim { color: #42606a; background: #e7eff1; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+    label { display: grid; gap: 5px; color: #42606a; font-size: 12px; font-weight: 700; }
+    select, button { font: inherit; border-radius: 8px; padding: 10px 12px; }
+    select { min-width: 180px; max-width: 300px; border: 1px solid #bacbd0; background: white; color: #17313c; }
+    button { border: 1px solid #075e72; background: #075e72; color: white; cursor: pointer; font-weight: 700; }
+    button.secondary { color: #075e72; background: white; }
+    button:hover { filter: brightness(.94); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { color: #627981; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+    th, td { padding: 13px 10px; border-top: 1px solid #e7eeee; vertical-align: top; }
+    td strong { display: block; }
+    td small { display: block; margin-top: 4px; color: #657b82; }
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .note { border-left: 3px solid #e6ac3e; background: #fffaf0; padding: 12px 14px; color: #6f501d; border-radius: 0 8px 8px 0; font-size: 14px; }
+    .results { display: grid; gap: 12px; }
+    .result-card { border: 1px solid #dce6e6; border-radius: 10px; padding: 16px; }
+    .result-card h3 { margin: 0 0 8px; font-size: 17px; }
+    .result-card p { margin: 5px 0; }
+    .sources a { display: block; color: #066579; margin-top: 7px; overflow-wrap: anywhere; }
+    dialog { border: 1px solid #dce6e6; border-radius: 14px; padding: 24px; width: min(640px, 92vw); box-shadow: 0 30px 80px #092e3b44; }
+    dialog::backdrop { background: #092e3b99; }
+    dialog h2 { margin-right: 50px; }
+    code { background: #eaf1f3; padding: 2px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+    ol { line-height: 1.65; padding-left: 22px; }
+    .error { color: #9e3333; }
+  </style>
+</head>
+<body>
+  <header>
+    <small>SYNCHRO / PROJECT INTELLIGENCE</small>
+    <h1>Location Workbench</h1>
+    <p>Resolve source-backed project locations, explain exclusions, and find qualified cross-utility opportunities.</p>
+  </header>
+  <main>
+    <section>
+      <div class="section-head">
+        <div><h2>Excluded Projects</h2><p class="muted">Records needing location, status, or validation review before they qualify for the verified pair finder.</p></div>
+        <span id="queue-count" class="pill warn">Loading</span>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Project</th><th>Location &amp; status</th><th>Review blockers</th><th>Next step</th></tr></thead>
+        <tbody id="queue"><tr><td colspan="4" class="muted">Loading project versions…</td></tr></tbody>
+      </table></div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div><h2>Compare two records</h2><p class="muted">Shows the measured separation and explains whether the supplied geometry can support a matching decision.</p></div>
+      </div>
+      <div class="controls">
+        <label>First project<select id="project-a"></select></label>
+        <label>Second project<select id="project-b"></select></label>
+        <button id="compare">Assess pair</button>
+      </div>
+      <div id="assessment" class="results" style="margin-top: 16px"></div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div><h2>Qualified DESC ↔ Georgia Power pairs</h2><p class="muted">Current, non-fixture projects with accepted site geometry and eligible status, strictly under the configured maximum.</p></div>
+        <span id="pair-count" class="pill dim">Loading</span>
+      </div>
+      <div id="pairs" class="results"></div>
+    </section>
+  </main>
+
+  <dialog id="review-dialog">
+    <button id="close-dialog" class="secondary" style="float:right">Close</button>
+    <h2 id="review-title">Verify location</h2>
+    <p class="muted" id="review-id"></p>
+    <div class="note">Current coordinates marked as reference or unresolved are not verified project sites. Use a project-specific filing map or GIS feature before changing geometry quality.</div>
+    <ol>
+      <li>Open the source evidence below and confirm the exact project geometry and current status.</li>
+      <li>Use <code>POST /api/v1/projects/{project_id}/verify-location</code> with the current version ID, new geometry, source URL and feature/page, reviewer, and reason.</li>
+      <li>Confirm the new version in this queue and rerun the qualified pair search.</li>
+    </ol>
+    <p class="muted">Verification writes require the API's protected uploader. Do not put its shared key in this page.</p>
+    <div id="review-sources" class="sources"></div>
+  </dialog>
+
+  <script>
+    const api = '/api/v1';
+    const $ = id => document.getElementById(id);
+    const labels = {
+      FIXTURE: 'Starter fixture', MISSING_GEOMETRY: 'No geometry',
+      UNRESOLVED_GEOMETRY: 'Geometry unresolved', APPROXIMATE_GEOMETRY: 'Approximate geometry',
+      REFERENCE_CENTER_POINT: 'Reference center point', VALIDATION_PENDING: 'Validation pending',
+      STATUS_NOT_ELIGIBLE: 'Status not eligible', PROJECT_A_NEEDS_REVIEW: 'First project needs review',
+      PROJECT_B_NEEDS_REVIEW: 'Second project needs review', OUT_OF_RANGE: 'Beyond configured maximum'
+    };
+    let projects = [];
+    function node(tag, text, className) {
+      const el = document.createElement(tag);
+      if (text !== undefined) el.textContent = text;
+      if (className) el.className = className;
+      return el;
+    }
+    function clear(el) { el.replaceChildren(); }
+    function error(el, message) { clear(el); el.append(node('p', message, 'error')); }
+    async function get(path) {
+      const response = await fetch(api + path);
+      if (!response.ok) throw new Error(`API returned ${response.status}. Check PostGIS and the schema migration.`);
+      return response.json();
+    }
+    function tags(items) {
+      const wrap = node('div', undefined, 'tags');
+      items.forEach(item => wrap.append(node('span', labels[item] || item, 'pill warn')));
+      return wrap;
+    }
+    function sourceLinks(el, evidence) {
+      evidence.forEach(source => {
+        if (!source.source_url) return;
+        try {
+          const url = new URL(source.source_url);
+          if (!['https:', 'http:'].includes(url.protocol)) return;
+          const item = node('div');
+          const link = node('a', `${source.source_name} · ${source.page_or_row || source.source_id}`);
+          link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
+          item.append(link);
+          if (source.snippet) item.append(node('p', source.snippet, 'muted'));
+          el.append(item);
+        } catch (_) { /* Ignore malformed source URLs. */ }
+      });
+    }
+    function openReview(project) {
+      $('review-title').textContent = `Verify ${project.project_name}`;
+      const coords = project.geometry ? JSON.stringify(project.geometry.coordinates) : 'none';
+      $('review-id').textContent = `Project ID: ${project.project_id} · Current version: ${project.version_id} · Supplied coordinates: ${coords}`;
+      clear($('review-sources'));
+      sourceLinks($('review-sources'), project.evidence || []);
+      $('review-dialog').showModal();
+    }
+    async function loadQueue() {
+      try {
+        const [queue, all] = await Promise.all([get('/location-review-queue'), get('/projects')]);
+        projects = all.filter(p => !p.is_fixture);
+        $('queue-count').textContent = `${queue.total} need review`;
+        clear($('queue'));
+        if (!queue.total) {
+          const row = node('tr'); const cell = node('td', 'No projects in the review queue.', 'muted');
+          cell.colSpan = 4; row.append(cell); $('queue').append(row);
+        }
+        queue.projects.forEach(({project, blockers, coordinate_role}) => {
+          const row = node('tr');
+          const identity = node('td'); identity.append(node('strong', project.project_name), node('small', `${project.utility_id} · ${project.project_id}`));
+          const location = node('td'); location.append(node('strong', project.location_text), node('small', `${coordinate_role} · ${project.status}`));
+          const issue = node('td'); issue.append(tags(blockers));
+          const next = node('td'); const button = node('button', 'Verify location', 'secondary');
+          button.addEventListener('click', () => openReview(project)); next.append(button);
+          row.append(identity, location, issue, next); $('queue').append(row);
+        });
+        ['project-a', 'project-b'].forEach((id, index) => {
+          clear($(id));
+          projects.forEach((p, i) => {
+            const option = node('option', `${p.utility_id} · ${p.project_name}`);
+            option.value = p.project_id; $(id).append(option);
+            if (i === index) $(id).value = p.project_id;
+          });
+        });
+        if (projects.length >= 2) await compare();
+      } catch (err) { error($('queue'), err.message); $('queue-count').textContent = 'Unavailable'; }
+    }
+    async function compare() {
+      const a = $('project-a').value, b = $('project-b').value;
+      if (!a || !b) return;
+      try {
+        const result = await get(`/pair-assessments?project_a=${encodeURIComponent(a)}&project_b=${encodeURIComponent(b)}`);
+        clear($('assessment'));
+        const card = node('div', undefined, 'result-card');
+        card.append(node('h3', result.qualifies ? 'Pair qualifies for opportunity analysis' : 'Pair needs review'));
+        if (result.distance) {
+          const km = (result.distance.meters / 1000).toFixed(2);
+          card.append(node('p', `${km} km between supplied geometries · ${(result.maximum_meters / 1000).toFixed(1)} km maximum`));
+          if (result.distance.kind === 'REFERENCE_POINT_SEPARATION')
+            card.append(node('p', 'This is a reference-point separation, not a verified project-to-project distance.', 'note'));
+          else card.append(node('p', `Distance basis: ${result.distance.kind.replaceAll('_', ' ').toLowerCase()}.`, 'muted'));
+        } else card.append(node('p', 'Distance unavailable until both records have geometry.', 'muted'));
+        if (result.blockers.length) card.append(tags(result.blockers));
+        $('assessment').append(card);
+      } catch (err) { error($('assessment'), err.message); }
+    }
+    async function loadPairs() {
+      try {
+        const data = await get('/qualified-pairs');
+        $('pair-count').textContent = `${data.total} qualified`;
+        clear($('pairs'));
+        if (!data.total) $('pairs').append(node('p', 'No qualified DESC–Georgia Power pair is currently available. Verify source-backed sites and status, then rerun the search.', 'muted'));
+        data.opportunities.forEach(pair => {
+          const card = node('div', undefined, 'result-card');
+          const names = pair.projects.map(p => p.project_name).join(' ↔ ');
+          card.append(node('h3', names));
+          card.append(node('p', `${(pair.distance.meters / 1000).toFixed(2)} km · ${pair.tier.replaceAll('_', ' ')} · ${pair.distance.geometry_quality}`, 'muted'));
+          $('pairs').append(card);
+        });
+      } catch (err) { error($('pairs'), err.message); $('pair-count').textContent = 'Unavailable'; }
+    }
+    $('compare').addEventListener('click', compare);
+    $('close-dialog').addEventListener('click', () => $('review-dialog').close());
+    loadQueue(); loadPairs();
+  </script>
+</body>
+</html>

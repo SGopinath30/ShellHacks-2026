@@ -29,8 +29,9 @@ def health():
             schema = conn.execute("SELECT to_regclass('synchro.project_versions') AS name").fetchone()["name"]
             decision_ledger = conn.execute("SELECT to_regclass('synchro.decision_ledger') AS name").fetchone()["name"]
             analysis_state = conn.execute("SELECT to_regclass('synchro.opportunity_analysis_state') AS name").fetchone()["name"]
+            verifications = conn.execute("SELECT to_regclass('synchro.location_verifications') AS name").fetchone()["name"]
         compatible = tuple(map(int, version.split('.')[:2])) >= (3,4)
-        schema_ready = all(table is not None for table in (schema,decision_ledger,analysis_state))
+        schema_ready = all(table is not None for table in (schema,decision_ledger,analysis_state,verifications))
         ready = compatible and schema_ready
         return {"status":"ok" if ready else "unavailable", "api":"ok", "database":"ok",
                 "postgis":version, "postgis_compatible":compatible,
@@ -40,33 +41,56 @@ def health():
 
 
 def save(candidate):
+    with connect() as conn:
+        return save_in_transaction(conn,candidate)
+
+
+def save_in_transaction(conn,candidate,expected_version_id=None):
     from .decision_ledger import record_project_version_change
     payload = candidate.model_dump(mode="json")
     digest = hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(",",":")).encode()).hexdigest()[:20]
+    conn.execute("INSERT INTO synchro.utilities VALUES (%s) ON CONFLICT DO NOTHING", (candidate.utility_id,))
+    conn.execute("INSERT INTO synchro.projects VALUES (%s,%s) ON CONFLICT DO NOTHING", (candidate.project_id,candidate.utility_id))
+    locked = conn.execute("SELECT utility_id FROM synchro.projects WHERE project_id=%s FOR UPDATE", (candidate.project_id,)).fetchone()
+    if locked["utility_id"] != candidate.utility_id:
+        raise ValueError("A project ID cannot change utilities")
+    row = conn.execute("SELECT payload FROM synchro.project_versions WHERE project_id=%s AND is_current", (candidate.project_id,)).fetchone()
+    current = ProjectVersion.model_validate(row["payload"]) if row else None
+    if expected_version_id is not None and (current is None or current.version_id != expected_version_id):
+        raise ValueError("Project version changed; refresh before verifying")
+    if current and current.model_dump(mode="json",exclude={"version_id","version_number"}) == payload:
+        return current
+    number = conn.execute("SELECT COALESCE(MAX(version_number),0)+1 AS n FROM synchro.project_versions WHERE project_id=%s", (candidate.project_id,)).fetchone()["n"]
+    result = ProjectVersion(**payload,version_id=f"PV-{digest}-{number}",version_number=number)
+    conn.execute("UPDATE synchro.project_versions SET is_current=false WHERE project_id=%s AND is_current",(candidate.project_id,))
+    conn.execute("""INSERT INTO synchro.project_versions
+      (version_id,project_id,version_number,payload,geometry,accepted_at)
+      VALUES (%s,%s,%s,%s,ST_SetSRID(ST_GeomFromGeoJSON(%s),4326),
+              CASE WHEN %s THEN now() ELSE NULL END)""",
+      (result.version_id,result.project_id,number,Jsonb(result.model_dump(mode="json")),
+       candidate.geometry.model_dump_json() if candidate.geometry else None,
+       candidate.validation_state == "ACCEPTED" and not candidate.is_fixture))
+    if current:
+        record_project_version_change(conn,candidate.project_id,current.version_id,result.version_id)
+    return result
+
+
+def current_project(conn,project_id,lock=False):
+    if lock:
+        found = conn.execute("SELECT 1 FROM synchro.projects WHERE project_id=%s FOR UPDATE",(project_id,)).fetchone()
+        if not found:
+            return None
+    row = conn.execute("SELECT payload FROM synchro.project_versions WHERE project_id=%s AND is_current",
+                       (project_id,)).fetchone()
+    return ProjectVersion.model_validate(row["payload"]) if row else None
+
+
+def distance_between_current(project_a,project_b):
     with connect() as conn:
-        conn.execute("INSERT INTO synchro.utilities VALUES (%s) ON CONFLICT DO NOTHING", (candidate.utility_id,))
-        conn.execute("INSERT INTO synchro.projects VALUES (%s,%s) ON CONFLICT DO NOTHING", (candidate.project_id,candidate.utility_id))
-        locked = conn.execute("SELECT utility_id FROM synchro.projects WHERE project_id=%s FOR UPDATE", (candidate.project_id,)).fetchone()
-        if locked["utility_id"] != candidate.utility_id:
-            raise ValueError("A project ID cannot change utilities")
-        row = conn.execute("SELECT payload FROM synchro.project_versions WHERE project_id=%s AND is_current", (candidate.project_id,)).fetchone()
-        if row:
-            current = ProjectVersion.model_validate(row["payload"])
-            if current.model_dump(mode="json",exclude={"version_id","version_number"}) == payload:
-                return current
-        number = conn.execute("SELECT COALESCE(MAX(version_number),0)+1 AS n FROM synchro.project_versions WHERE project_id=%s", (candidate.project_id,)).fetchone()["n"]
-        result = ProjectVersion(**payload,version_id=f"PV-{digest}-{number}",version_number=number)
-        conn.execute("UPDATE synchro.project_versions SET is_current=false WHERE project_id=%s AND is_current",(candidate.project_id,))
-        conn.execute("""INSERT INTO synchro.project_versions
-          (version_id,project_id,version_number,payload,geometry,accepted_at)
-          VALUES (%s,%s,%s,%s,ST_SetSRID(ST_GeomFromGeoJSON(%s),4326),
-                  CASE WHEN %s THEN now() ELSE NULL END)""",
-          (result.version_id,result.project_id,number,Jsonb(result.model_dump(mode="json")),
-           candidate.geometry.model_dump_json() if candidate.geometry else None,
-           candidate.validation_state == "ACCEPTED" and not candidate.is_fixture))
-        if row:
-            record_project_version_change(conn,candidate.project_id,current.version_id,result.version_id)
-        return result
+        row = conn.execute("""SELECT ST_Distance(a.geometry::geography,b.geometry::geography) AS meters
+            FROM synchro.project_versions a JOIN synchro.project_versions b ON b.project_id=%s AND b.is_current
+            WHERE a.project_id=%s AND a.is_current""",(project_b,project_a)).fetchone()
+    return row["meters"] if row else None
 
 
 def projects():

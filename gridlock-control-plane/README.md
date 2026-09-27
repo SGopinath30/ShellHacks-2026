@@ -30,8 +30,12 @@ The committed `data/fixtures/starter_projects.json` and `starter_overlaps.json` 
 - `POST /api/v1/opportunities/{pair_id}/decisions`: append a manager decision with the exact opportunity snapshot. Requires the `decision_context_hash` from opportunity detail and a reason.
 - `GET /api/v1/opportunities/{pair_id}/decision-ledger`: current review status and immutable event history.
 - `POST /api/v1/opportunities/{pair_id}/decisions/{event_id}/reason`: append an old/new reason correction while retaining the original decision.
+- `GET /api/v1/location-workbench`: read-only Excluded Projects page with source review, pair assessment, and qualified pair results.
+- `GET /api/v1/location-review-queue`, `GET /api/v1/pair-assessments`, `GET /api/v1/qualified-pairs`: explain project readiness and find source-backed DESC–Georgia Power pairs.
+- `POST /api/v1/projects/{project_id}/verify-location`: source-backed geometry and optional status correction as a new project version with append-only review history.
 
 See [DECISION_LEDGER.md](DECISION_LEDGER.md) for the Lenovo page contract, actions, identity limitation, and migration. The current Impact Engine is unimplemented, so impact values are null in decision snapshots.
+See [LOCATION_WORKBENCH.md](LOCATION_WORKBENCH.md) for the verification contract and distance labeling rules.
 
 `CHALLENGE_GEOMETRY` is the default: minimum geodesic distance between usable stored geometries, PostGIS intersections, and a strict `< 40000 m` threshold. Configure the sponsor maximum using `CHALLENGE_MAXIMUM_METERS` or a request’s `max_distance` parameter. Tiers use 1600 m and 8000 m cutoffs in `app/challenge/config.py`. `STARTER_COMPATIBILITY` uses the workbook’s explicit center points, haversine distance, and strict `< 25 international miles`; it reproduces the six organizer pairs and the workbook distances to two decimals. Timing never creates a geographic opportunity. Construction windows have confirmed/possible/no overlap; in-service milestones report a date gap only. Rank order is tier, distance, temporal strength, stable pair ID.
 

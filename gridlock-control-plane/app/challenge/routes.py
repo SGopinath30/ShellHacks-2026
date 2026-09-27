@@ -1,18 +1,27 @@
 from typing import Literal
 import hmac
 import os
+from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query, Security
 from fastapi.security import APIKeyHeader
+from fastapi.responses import FileResponse
 import psycopg
 from . import repository
 from .config import Profile, get_config
 from .contracts import ProjectInput, ProjectVersion, Quality, geometry_status
 from .decision_ledger import (DecisionRequest, ReasonUpdateRequest, append_decision,
                               context_hash, ledger, snapshot, update_reason)
+from .location_workbench import (LocationVerificationRequest, assess_pair, qualified_pairs,
+                                 review_queue, verification_history, verify_location)
 from uuid import UUID
 
 router = APIRouter(prefix="/api/v1", tags=["SYNCHRO challenge v1"])
 write_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+@router.get("/location-workbench",include_in_schema=False)
+def location_workbench_page():
+    return FileResponse(Path(__file__).with_name("location_workbench.html"),media_type="text/html")
 
 
 def ledger_read_key(key: str | None = Security(write_key_header)):
@@ -61,6 +70,49 @@ def geojson(utility: str | None = None,status: str | None = None,
                          "geometry":p.geometry.model_dump(mode="json") if p.geometry else None,
                          "properties":properties})
     return {"type":"FeatureCollection","features":features}
+
+
+@router.get("/location-review-queue")
+def location_review_queue(utility_id: str | None = None,include_fixtures: bool = False):
+    return review_queue(db_call(repository.projects),utility_id,include_fixtures)
+
+
+@router.get("/pair-assessments")
+def pair_assessment(project_a: str,project_b: str):
+    current = {p.project_id:p for p in db_call(repository.projects)}
+    if project_a not in current or project_b not in current:
+        raise HTTPException(404,"One or both projects were not found")
+    meters = db_call(repository.distance_between_current,project_a,project_b)
+    return assess_pair(current[project_a],current[project_b],meters)
+
+
+@router.get("/qualified-pairs")
+def list_qualified_pairs(utility_a: str = "DESC",utility_b: str = "GPC"):
+    if utility_a == utility_b:
+        raise HTTPException(422,"Choose two different utilities")
+    rows = qualified_pairs(selected(Profile.CHALLENGE_GEOMETRY,None,utility_a,utility_b),utility_a,utility_b)
+    config = get_config(Profile.CHALLENGE_GEOMETRY)
+    return {"utility_a":utility_a,"utility_b":utility_b,"maximum_meters":config.maximum_meters,
+            "strict_upper_bound":True,"total":len(rows),"opportunities":rows}
+
+
+@router.post("/projects/{project_id}/verify-location",status_code=201)
+def verify_project_location(project_id: str,request: LocationVerificationRequest,
+                            _key: str | None = Security(write_key_header)):
+    try:
+        return db_call(verify_location,project_id,request)
+    except LookupError as exc:
+        raise HTTPException(404,str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(409,str(exc)) from exc
+
+
+@router.get("/projects/{project_id}/location-verifications")
+def location_history(project_id: str,_key: None = Security(ledger_read_key)):
+    result = db_call(verification_history,project_id)
+    if result is None:
+        raise HTTPException(404,"Project not found")
+    return result
 
 
 def selected(profile,maximum,utility_a=None,utility_b=None,timeline_filter=None,geometry_quality=None):
