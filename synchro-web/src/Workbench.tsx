@@ -6,6 +6,7 @@ import MapPanel from './MapPanel'
 import ResearchPanel from './ResearchPanel'
 import type { PairAssessment, Project, ReviewQueue } from './types'
 import { formatMiles, safeSourceUrl } from './utils'
+import { referenceDistanceMeters, usesSourceBackedReference } from './projectMapGeometry'
 
 const blockerNames: Record<string, string> = {
   FIXTURE: 'Starter fixture', MISSING_GEOMETRY: 'Missing geometry', UNRESOLVED_GEOMETRY: 'Location unresolved',
@@ -99,6 +100,13 @@ export default function Workbench({ projects, queue, maximumMeters, live, projec
   const [verify, setVerify] = useState(false)
   const selected = useMemo(() => projects.find(project => project.project_id === selectedId) ?? queue.projects[0]?.project ?? projects.find(project => !project.is_fixture), [projects, queue, selectedId])
   const visibleRows = live ? queue.projects : projects.filter(project => !project.is_fixture).map(project => ({ project, blockers: [] }))
+  const comparedProjects = useMemo(() => [projects.find(project => project.project_id === a), projects.find(project => project.project_id === b)] as const, [projects, a, b])
+  const correctedReferenceDistance = useMemo(() => {
+    const [first, second] = comparedProjects
+    if (!first || !second || (!usesSourceBackedReference(first) && !usesSourceBackedReference(second))) return null
+    return referenceDistanceMeters(first, second)
+  }, [comparedProjects])
+  const displayedDistanceMeters = correctedReferenceDistance ?? assessment?.distance?.meters ?? null
 
   useEffect(() => {
     if (!projects.length) return
@@ -139,7 +147,7 @@ export default function Workbench({ projects, queue, maximumMeters, live, projec
     </div>
     <section className="comparison-section"><div className="panel-head"><div><span className="eyebrow dark">DISTANCE EXPLAINED</span><h2>Compare two records</h2><p>See exactly what the current coordinates can and cannot establish.</p></div></div>
       <div className="compare-grid"><div className="compare-controls"><label>PROJECT A<select value={a} onChange={e => setA(e.target.value)}>{projects.map(p => <option value={p.project_id} key={p.project_id}>{p.utility_id} · {p.project_name}</option>)}</select></label><label>PROJECT B<select value={b} onChange={e => setB(e.target.value)}>{projects.map(p => <option value={p.project_id} key={p.project_id}>{p.utility_id} · {p.project_name}</option>)}</select></label>
-          {assessment && <div className="comparison-result"><span>SUPPLIED-GEOMETRY SEPARATION</span><strong>{assessment.distance ? `${formatMiles(assessment.distance.meters)} mi` : 'Unavailable'}</strong><p>{assessment.distance?.kind === 'REFERENCE_POINT_SEPARATION' ? 'Distance between reference points. This is not a verified project-to-project distance.' : assessment.distance ? 'Measured between supplied project geometries.' : 'Both records need geometry before distance can be measured.'}</p><div className="threshold-track"><span style={{ width: `${Math.min(100, assessment.distance ? assessment.distance.meters / assessment.maximum_meters * 100 : 0)}%` }} /></div><small>Strictly under {formatMiles(assessment.maximum_meters, 1)} mi required · {assessment.qualifies ? 'Qualifies' : 'No qualified opportunity'}</small></div>}
+          {assessment && <div className="comparison-result"><span>REFERENCE-POINT SEPARATION</span><strong>{displayedDistanceMeters !== null ? `${formatMiles(displayedDistanceMeters)} mi` : 'Unavailable'}</strong><p>{correctedReferenceDistance !== null ? 'Calculated from the same source-backed reference points shown on the map. This is not a verified project-to-project distance.' : assessment.distance?.kind === 'REFERENCE_POINT_SEPARATION' ? 'Distance between reference points. This is not a verified project-to-project distance.' : assessment.distance ? 'Measured between supplied project geometries.' : 'Both records need geometry before distance can be measured.'}</p><div className="threshold-track"><span style={{ width: `${Math.min(100, displayedDistanceMeters !== null ? displayedDistanceMeters / assessment.maximum_meters * 100 : 0)}%` }} /></div><small>Strictly under {formatMiles(assessment.maximum_meters, 1)} mi required · {assessment.qualifies ? 'Qualifies' : 'No qualified opportunity'}</small></div>}
           {assessmentError && <div className="notice error">{assessmentError}</div>}
         </div><MapPanel projects={projects.filter(p => p.project_id === a || p.project_id === b)} compact /></div>
     </section>

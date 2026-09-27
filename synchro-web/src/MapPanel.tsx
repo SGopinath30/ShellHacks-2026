@@ -3,6 +3,7 @@ import { AttributionControl, LngLatBounds, Map as MapLibreMap, NavigationControl
 import type { Feature, FeatureCollection, Geometry as GeoJSONGeometry } from 'geojson'
 import { MapPin, Maximize2 } from 'lucide-react'
 import type { Project } from './types'
+import { geometryIsInSoutheast, mapGeometry, mapLocation, usesSourceBackedReference } from './projectMapGeometry'
 
 type ProjectProperties = {
   projectId: string
@@ -17,32 +18,6 @@ type ProjectProperties = {
 
 const EMPTY_FEATURES: FeatureCollection<GeoJSONGeometry, ProjectProperties> = { type: 'FeatureCollection', features: [] }
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
-const SOUTHEAST_BOUNDS = { west: -90, south: 24, east: -75, north: 38 }
-const SOURCE_BACKED_REFERENCES: Record<string, { coordinates: [number, number]; location: string }> = {
-  'DESC-WINNSBORO-WEST-2025-208-E': {
-    coordinates: [-81.088056, 34.376944],
-    location: 'Winnsboro, Fairfield County, South Carolina · town reference only',
-  },
-}
-
-function coordinateIsInSoutheast(coordinate: number[]): boolean {
-  const [longitude, latitude] = coordinate
-  return Number.isFinite(longitude) && Number.isFinite(latitude)
-    && longitude >= SOUTHEAST_BOUNDS.west && longitude <= SOUTHEAST_BOUNDS.east
-    && latitude >= SOUTHEAST_BOUNDS.south && latitude <= SOUTHEAST_BOUNDS.north
-}
-
-function geometryIsInSoutheast(geometry: Project['geometry']): boolean {
-  if (!geometry) return false
-  if (geometry.type === 'Point') return coordinateIsInSoutheast(geometry.coordinates)
-  return geometry.coordinates.length > 0 && geometry.coordinates.every(coordinate => coordinateIsInSoutheast(coordinate))
-}
-
-function mapGeometry(project: Project): Project['geometry'] {
-  if (project.geometry && geometryIsInSoutheast(project.geometry)) return project.geometry
-  const reference = SOURCE_BACKED_REFERENCES[project.project_id]
-  return reference ? { type: 'Point', coordinates: reference.coordinates } : null
-}
 
 function projectFeatures(projects: Project[]): FeatureCollection<GeoJSONGeometry, ProjectProperties> {
   const features: Feature<GeoJSONGeometry, ProjectProperties>[] = []
@@ -51,7 +26,7 @@ function projectFeatures(projects: Project[]): FeatureCollection<GeoJSONGeometry
     // the live API coordinate is corrupt. It remains labeled as a reference.
     const geometry = mapGeometry(project)
     if (!geometry) continue
-    const reference = SOURCE_BACKED_REFERENCES[project.project_id]
+    const usesReference = usesSourceBackedReference(project)
     features.push({
       type: 'Feature',
       id: project.project_id,
@@ -61,8 +36,8 @@ function projectFeatures(projects: Project[]): FeatureCollection<GeoJSONGeometry
         projectName: project.project_name,
         utilityId: project.utility_id,
         status: project.status,
-        location: reference && (!project.geometry || !geometryIsInSoutheast(project.geometry)) ? reference.location : project.location_text,
-        quality: reference && (!project.geometry || !geometryIsInSoutheast(project.geometry)) ? 'UNRESOLVED' : project.geometry_quality,
+        location: mapLocation(project),
+        quality: usesReference ? 'UNRESOLVED' : project.geometry_quality,
         origin: project.geometry_origin,
         validation: project.validation_state,
       },
@@ -76,8 +51,8 @@ export default function MapPanel({ projects, compact = false }: { projects: Proj
   const mapRef = useRef<MapLibreMap | null>(null)
   const geojson = useMemo(() => projectFeatures(projects), [projects])
   const hasReference = projects.some(project => project.geometry_origin === 'CENTER_POINT' || project.geometry_quality === 'UNRESOLVED')
-  const restoredReferenceCount = projects.filter(project => project.geometry && !geometryIsInSoutheast(project.geometry) && SOURCE_BACKED_REFERENCES[project.project_id]).length
-  const hiddenCoordinateCount = projects.filter(project => project.geometry && !geometryIsInSoutheast(project.geometry) && !SOURCE_BACKED_REFERENCES[project.project_id]).length
+  const restoredReferenceCount = projects.filter(usesSourceBackedReference).length
+  const hiddenCoordinateCount = projects.filter(project => project.geometry && !geometryIsInSoutheast(project.geometry) && !usesSourceBackedReference(project)).length
   const hasGeometry = geojson.features.length > 0
 
   useEffect(() => {
