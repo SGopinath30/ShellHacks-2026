@@ -215,6 +215,7 @@ tempCodeRunnerFile.py
 
 # Local acquired evidence, derived artifacts, and SQLite state (may be large)
 /data/
+/Tarun/data/
 
 # Marimo
 marimo/_static/
