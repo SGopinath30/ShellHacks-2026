@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ArrowRight, Menu, X } from 'lucide-react'
-import { getProjects, getQualifiedPairs, getReviewQueue } from './api'
+import { ApiError, checkReviewerKey, getProjects, getQualifiedPairs, getReviewQueue } from './api'
 import Landing from './Landing'
 import Opportunities from './Opportunities'
 import Workbench from './Workbench'
@@ -27,7 +27,24 @@ export default function App() {
   const [apiError, setApiError] = useState('')
   const [loading, setLoading] = useState(true)
   const [accessKey, setAccessKey] = useState('')
+  const [accessDraft, setAccessDraft] = useState('')
   const [keyOpen, setKeyOpen] = useState(false)
+  const [keyError, setKeyError] = useState('')
+  const [checkingKey, setCheckingKey] = useState(false)
+
+  async function connectKey(event: FormEvent) {
+    event.preventDefault()
+    const candidate = accessDraft.trim()
+    if (!candidate || !projects[0]) { setKeyError('Enter the API write key after project records load.'); return }
+    setCheckingKey(true); setKeyError(''); setAccessKey('')
+    try {
+      await checkReviewerKey(projects[0].project_id, candidate)
+      setAccessKey(candidate); setAccessDraft(''); setKeyOpen(false)
+    } catch (cause) {
+      const error = cause as ApiError
+      setKeyError(error.status === 401 ? 'The API rejected that key. Use the current WRITE_API_KEY from the API owner.' : error.message)
+    } finally { setCheckingKey(false) }
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -73,9 +90,9 @@ export default function App() {
     <header className="site-header"><div className="content-width header-inner">
       <a href="#home" className="brand" aria-label="SYNCHRO home"><span className="brand-mark"><i /><i /><i /></span><span>SYNCHRO<small>GRID COORDINATION</small></span></a>
       <nav className={menu ? 'nav-links open' : 'nav-links'} aria-label="Main navigation"><a className={page === 'home' ? 'active' : ''} href="#home">Platform</a><a className={page === 'workbench' ? 'active' : ''} href="#workbench">Location Workbench</a><a className={page === 'opportunities' ? 'active' : ''} href="#opportunities">Opportunities</a></nav>
-      <div className="header-actions"><span className={`system-status ${live ? 'online' : ''}`}><i /> {loading ? 'Checking data' : live ? 'API connected' : projectsLoaded ? 'API needs update' : 'API unavailable'}</span><button className="button button-small access-trigger" type="button" onClick={() => setKeyOpen(value => !value)} aria-expanded={keyOpen}>{accessKey ? 'Reviewer key set' : 'Reviewer access'}</button><a className="button button-small" href={page === 'home' ? '#workbench' : '#opportunities'}>{page === 'home' ? 'Enter workspace' : 'View opportunities'} <ArrowRight size={15} /></a><button className="mobile-menu" onClick={() => setMenu(value => !value)} aria-label={menu ? 'Close menu' : 'Open menu'}>{menu ? <X size={22} /> : <Menu size={22} />}</button></div>
+      <div className="header-actions"><span className={`system-status ${live ? 'online' : ''}`}><i /> {loading ? 'Checking data' : live ? 'API connected' : projectsLoaded ? 'API needs update' : 'API unavailable'}</span><button className="button button-small access-trigger" type="button" onClick={() => setKeyOpen(value => !value)} aria-expanded={keyOpen}>{accessKey ? 'Reviewer access active' : 'Reviewer access'}</button><a className="button button-small" href={page === 'home' ? '#workbench' : '#opportunities'}>{page === 'home' ? 'Enter workspace' : 'View opportunities'} <ArrowRight size={15} /></a><button className="mobile-menu" onClick={() => setMenu(value => !value)} aria-label={menu ? 'Close menu' : 'Open menu'}>{menu ? <X size={22} /> : <Menu size={22} />}</button></div>
     </div></header>
-    {keyOpen && <div className="access-bar content-width"><label>API reviewer key <input type="password" autoComplete="off" value={accessKey} onChange={event => setAccessKey(event.target.value.trim())} placeholder="Enter key for protected actions" /></label><button type="button" className="button button-small" onClick={() => { setAccessKey(''); setKeyOpen(false) }}>Clear key</button><small>Held in this tab only. Enter it on a trusted device; the API still records reviewer IDs supplied in each form.</small></div>}
+    {keyOpen && <form className="access-bar content-width" onSubmit={connectKey}><label>API write key <input type="password" autoComplete="off" value={accessDraft} onChange={event => setAccessDraft(event.target.value)} placeholder="Enter key for protected actions" /></label><button type="submit" className="button button-small" disabled={checkingKey || !projectsLoaded}>{checkingKey ? 'Checking…' : 'Connect'}</button><button type="button" className="button button-small" onClick={() => { setAccessKey(''); setAccessDraft(''); setKeyError(''); setKeyOpen(false) }}>Clear access</button><small>Validated against a protected read. Held in this tab only; the API still records reviewer IDs supplied in each form.</small>{keyError && <span className="access-error" role="alert">{keyError}</span>}</form>}
     <AnimatePresence mode="wait"><motion.div key={page} initial={reduce ? undefined : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0, y: -10 }} transition={{ duration: .25 }}>
       {page === 'home' ? <Landing projects={projects} queue={queue} pairs={pairs} live={live} loading={loading} /> : page === 'workbench' ? <Workbench projects={projects} queue={queue} maximumMeters={pairs.maximum_meters} live={live} projectsLoaded={projectsLoaded} apiError={apiError} loading={loading} onReload={load} accessKey={accessKey} /> : <Opportunities data={pairs} live={live} apiError={apiError} accessKey={accessKey} />}
     </motion.div></AnimatePresence>

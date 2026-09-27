@@ -81,8 +81,9 @@ function VerificationPanel({ project, live, accessKey, onClose, onSaved }: { pro
         <label>Current status<select value={form.status} onChange={e => set('status', e.target.value)}><option value="">Keep {project.status}</option>{['proposed', 'planned', 'approved', 'in_progress', 'under_construction', 'on_hold', 'cancelled', 'completed', 'operational', 'unknown'].filter(value => value !== project.status).map(value => <option key={value} value={value}>{value.replaceAll('_', ' ')}</option>)}</select></label>
         {statusChanged && <div className="form-grid"><label>Status source ID<input required value={form.statusId} onChange={e => set('statusId', e.target.value)} /></label><label>Status source name<input required value={form.statusName} onChange={e => set('statusName', e.target.value)} /></label><label>Status source URL<input required type="url" value={form.statusUrl} onChange={e => set('statusUrl', e.target.value)} /></label><label>Supporting snippet<input required value={form.statusSnippet} onChange={e => set('statusSnippet', e.target.value)} /></label></div>}
         <p className="form-footnote">A high or authoritative geometry becomes accepted. Approximate geometry remains in review. Protected deployments require the reviewer key in the header. Reviewer identity is client asserted.</p>
+        {!accessKey && <div className="notice caution">Open Reviewer access in the header and connect the API write key before saving.</div>}
         {error && <div className="notice error" role="alert">{error}</div>}
-        <button className="button button-primary full" type="submit" disabled={!live || saving}>{saving ? 'Saving project version…' : live ? 'Save reviewed version' : 'Connect API to save'}</button>
+        <button className="button button-primary full" type="submit" disabled={!live || !accessKey || saving}>{saving ? 'Saving project version…' : !live ? 'Connect API to save' : !accessKey ? 'Connect reviewer access to save' : 'Save reviewed version'}</button>
       </form>
     </motion.aside>
   </motion.div>

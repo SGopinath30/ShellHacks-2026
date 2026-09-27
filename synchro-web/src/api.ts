@@ -49,6 +49,9 @@ export const getAssessment = (a: string, b: string) =>
 export const getOpportunity = (pairId: string) => api<Opportunity>(`/opportunities/${encodeURIComponent(pairId)}`)
 const authorized = (key: string): RequestInit => ({ headers: key ? { 'X-API-Key': key } : {} })
 
+export const checkReviewerKey = (projectId: string, key: string) =>
+  api<unknown>(`/projects/${encodeURIComponent(projectId)}/location-verifications`, authorized(key))
+
 export const getLedger = (pairId: string, key: string) => api<Ledger>(`/opportunities/${encodeURIComponent(pairId)}/decision-ledger`, authorized(key))
 
 export type VerificationInput = {
