@@ -204,6 +204,37 @@ def test_search_quota_falls_back_to_existing_source_urls(monkeypatch):
     assert provenance['retrieval_mode'] == 'URL_CONTEXT_ONLY_QUOTA_FALLBACK'
 
 
+def test_temporary_provider_demand_is_retried(monkeypatch):
+    import json
+    import httpx
+    monkeypatch.setenv('GEMINI_API_KEY', 'provider-secret')
+    monkeypatch.setattr(research, 'parcel_candidates', lambda p: {'state': 'UNAVAILABLE'})
+    monkeypatch.setattr(research.time, 'sleep', lambda seconds: None)
+    calls = []
+
+    def respond(req):
+        body = json.loads(req.content); calls.append(body)
+        if len(calls) == 1:
+            return httpx.Response(503, json={'error': {'status': 'UNAVAILABLE'}})
+        if len(calls) == 2:
+            return httpx.Response(200, json={'candidates': [{
+                'finishReason': 'STOP', 'content': {'parts': [{'text': 'Grounded report'}]},
+                'groundingMetadata': {'groundingChunks': [{'web': {
+                    'uri': 'https://example.com/source', 'title': 'Source'}}]}}]})
+        return httpx.Response(200, json={'candidates': [{
+            'finishReason': 'STOP', 'content': {'parts': [{'text': json.dumps({
+                'summary': 'Source reviewed', 'missing_evidence': [],
+                'outreach_draft': '', 'verification': None})}]}}]})
+
+    client = httpx.Client(transport=httpx.MockTransport(respond))
+    monkeypatch.setattr(research.httpx, 'Client', lambda **kwargs: client)
+    payload, provenance = research.generate({'project_id': 'test', 'version_id': 'PV-old'})
+
+    assert payload['summary'] == 'Source reviewed'
+    assert len(calls) == 3
+    assert provenance['retrieval_mode'] == 'GOOGLE_SEARCH_AND_URL_CONTEXT'
+
+
 def test_gis_unavailable_never_invents_coordinates(monkeypatch):
     import httpx
     from app.challenge import research_gis
