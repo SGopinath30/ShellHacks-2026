@@ -167,6 +167,43 @@ def test_provider_uses_grounded_research_then_validated_extraction(monkeypatch):
     assert 'provider-secret' not in json.dumps(calls)
 
 
+def test_search_quota_falls_back_to_existing_source_urls(monkeypatch):
+    import json
+    import httpx
+    monkeypatch.setenv('GEMINI_API_KEY', 'provider-secret')
+    monkeypatch.setattr(research, 'parcel_candidates', lambda p: {'state': 'UNAVAILABLE'})
+    calls = []
+
+    def respond(req):
+        body = json.loads(req.content); calls.append(body)
+        if len(calls) == 1:
+            return httpx.Response(429, json={'error': {'status': 'RESOURCE_EXHAUSTED'}})
+        if len(calls) == 2:
+            return httpx.Response(200, json={'candidates': [{
+                'finishReason': 'STOP',
+                'content': {'parts': [{'text': 'Reviewed the supplied official source URL.'}]},
+                'groundingMetadata': {'groundingChunks': [{'web': {
+                    'uri': 'https://example.com/source', 'title': 'Source'}}]}}]})
+        return httpx.Response(200, json={'candidates': [{
+            'finishReason': 'STOP', 'content': {'parts': [{'text': json.dumps({
+                'summary': 'Limited source review',
+                'missing_evidence': ['Broader source discovery remains needed'],
+                'outreach_draft': '', 'verification': None})}]}}]})
+
+    client = httpx.Client(transport=httpx.MockTransport(respond))
+    monkeypatch.setattr(research.httpx, 'Client', lambda **kwargs: client)
+    payload, provenance = research.generate({
+        'project_id': 'test', 'version_id': 'PV-old',
+        'evidence': [{'source_url': 'https://example.com/source'}]})
+
+    assert payload['verification'] is None
+    assert len(calls) == 3
+    assert calls[0]['tools'] == [{'google_search': {}}, {'url_context': {}}]
+    assert calls[1]['tools'] == [{'url_context': {}}]
+    assert 'source discovery was limited' in calls[1]['contents'][0]['parts'][0]['text']
+    assert provenance['retrieval_mode'] == 'URL_CONTEXT_ONLY_QUOTA_FALLBACK'
+
+
 def test_gis_unavailable_never_invents_coordinates(monkeypatch):
     import httpx
     from app.challenge import research_gis
