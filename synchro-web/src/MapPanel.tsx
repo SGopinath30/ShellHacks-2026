@@ -17,11 +17,27 @@ type ProjectProperties = {
 
 const EMPTY_FEATURES: FeatureCollection<GeoJSONGeometry, ProjectProperties> = { type: 'FeatureCollection', features: [] }
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+const SOUTHEAST_BOUNDS = { west: -90, south: 24, east: -75, north: 38 }
+
+function coordinateIsInSoutheast(coordinate: number[]): boolean {
+  const [longitude, latitude] = coordinate
+  return Number.isFinite(longitude) && Number.isFinite(latitude)
+    && longitude >= SOUTHEAST_BOUNDS.west && longitude <= SOUTHEAST_BOUNDS.east
+    && latitude >= SOUTHEAST_BOUNDS.south && latitude <= SOUTHEAST_BOUNDS.north
+}
+
+function geometryIsInSoutheast(geometry: Project['geometry']): boolean {
+  if (!geometry) return false
+  if (geometry.type === 'Point') return coordinateIsInSoutheast(geometry.coordinates)
+  return geometry.coordinates.length > 0 && geometry.coordinates.every(coordinate => coordinateIsInSoutheast(coordinate))
+}
 
 function projectFeatures(projects: Project[]): FeatureCollection<GeoJSONGeometry, ProjectProperties> {
   const features: Feature<GeoJSONGeometry, ProjectProperties>[] = []
   for (const project of projects) {
-    if (!project.geometry) continue
+    // Reject corrupt coordinates before they can distort the map bounds. The
+    // record remains visible elsewhere in the review workflow for correction.
+    if (!project.geometry || !geometryIsInSoutheast(project.geometry)) continue
     features.push({
       type: 'Feature',
       id: project.project_id,
@@ -46,6 +62,7 @@ export default function MapPanel({ projects, compact = false }: { projects: Proj
   const mapRef = useRef<MapLibreMap | null>(null)
   const geojson = useMemo(() => projectFeatures(projects), [projects])
   const hasReference = projects.some(project => project.geometry_origin === 'CENTER_POINT' || project.geometry_quality === 'UNRESOLVED')
+  const hiddenCoordinateCount = projects.filter(project => project.geometry && !geometryIsInSoutheast(project.geometry)).length
   const hasGeometry = geojson.features.length > 0
 
   useEffect(() => {
@@ -176,7 +193,7 @@ export default function MapPanel({ projects, compact = false }: { projects: Proj
         <span className="map-scale"><Maximize2 size={13} /> Reference view</span>
       </div>
       <div className="map-canvas maplibre-canvas" ref={mapHost} role="img" aria-label="Interactive map of current project locations" />
-      <div className="map-footer"><span className="legend-dot" style={{ background: hasReference ? '#f4b86b' : '#7be2c4' }} /> {!hasGeometry ? 'No project geometry loaded' : hasReference ? 'Reference locations' : 'Project geometry'} <span className="map-footer-note">{!hasGeometry ? 'Waiting for API records' : hasReference ? 'Site geometry needs review' : 'Source-backed geometry'}</span></div>
+      <div className="map-footer"><span className="legend-dot" style={{ background: hiddenCoordinateCount ? '#f4b86b' : hasReference ? '#f4b86b' : '#7be2c4' }} /> {hiddenCoordinateCount ? `${hiddenCoordinateCount} invalid coordinate${hiddenCoordinateCount === 1 ? '' : 's'} hidden` : !hasGeometry ? 'No project geometry loaded' : hasReference ? 'Reference locations' : 'Project geometry'} <span className="map-footer-note">{hiddenCoordinateCount ? 'Location needs correction' : !hasGeometry ? 'Waiting for API records' : hasReference ? 'Site geometry needs review' : 'Source-backed geometry'}</span></div>
     </div>
   )
 }
