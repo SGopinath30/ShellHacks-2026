@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { ArrowRight, ArrowUpRight, BadgeCheck, ChevronRight, Clock3, FileClock, Layers3, LockKeyhole, MapPin, ShieldAlert } from 'lucide-react'
-import { ApiError, getLedger, getOpportunity, postDecision } from './api'
+import { ArrowRight, ArrowUpRight, BadgeCheck, ChevronRight, Clock3, FileClock, FileDown, Layers3, LoaderCircle, LockKeyhole, MapPin, ShieldAlert } from 'lucide-react'
+import { ApiError, exportAuditPdf, getLedger, getOpportunity, postDecision } from './api'
 import MapPanel from './MapPanel'
 import type { Ledger, Opportunity, QualifiedPairs } from './types'
 import { safeSourceUrl } from './utils'
@@ -20,6 +20,7 @@ const eventLabels: Record<string, string> = {
   DISMISS: 'Opportunity dismissed', REASON_UPDATED: 'Reason updated',
   OPPORTUNITY_CREATED: 'Opportunity created', OPPORTUNITY_RECOMPUTED: 'Analysis recomputed',
   PROJECT_VERSION_CHANGED: 'Project version changed',
+  AUDIT_EXPORTED: 'Immutable audit PDF exported',
 }
 
 function Evidence({ opportunity }: { opportunity: Opportunity }) {
@@ -62,6 +63,10 @@ export default function Opportunities({ data, live, apiError, accessKey }: { dat
   const [reason, setReason] = useState('')
   const [decisionError, setDecisionError] = useState('')
   const [decisionSuccess, setDecisionSuccess] = useState('')
+  const [auditActor, setAuditActor] = useState('')
+  const [auditBusy, setAuditBusy] = useState(false)
+  const [auditError, setAuditError] = useState('')
+  const [auditSuccess, setAuditSuccess] = useState<{ auditId: string; pdfHash: string } | null>(null)
 
   useEffect(() => {
     if (!data.opportunities.length) { setSelectedId(''); setDetail(null); return }
@@ -96,6 +101,25 @@ export default function Opportunities({ data, live, apiError, accessKey }: { dat
     }
   }
 
+  async function downloadAudit() {
+    if (!detail || !auditActor.trim()) return
+    setAuditBusy(true); setAuditError(''); setAuditSuccess(null)
+    try {
+      const result = await exportAuditPdf(detail.pair_id, auditActor.trim(), accessKey)
+      const url = URL.createObjectURL(result.blob)
+      const link = document.createElement('a')
+      link.href = url; link.download = result.filename; document.body.appendChild(link); link.click(); link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setAuditSuccess({ auditId: result.auditId, pdfHash: result.pdfSha256 })
+      setLedger(await getLedger(detail.pair_id, accessKey))
+    } catch (cause) {
+      const error = cause as ApiError
+      setAuditError(error.status === 401 ? 'Reviewer key missing or invalid. Enter it under Reviewer access in the header.' : error.message)
+    } finally {
+      setAuditBusy(false)
+    }
+  }
+
   if (!live) return <main className="workspace-page content-width">
     <div className="workspace-heading"><div><span className="eyebrow dark"><span className="eyebrow-line" /> REGIONAL PLANNING</span><h1>Coordination Opportunities</h1><p>Qualified opportunities require the current analysis API.</p></div></div>
     <div className="opportunity-empty"><LockKeyhole size={34} /><h2>Opportunity analysis unavailable</h2><p>{apiError || 'Waiting for the SYNCHRO API.'}</p><a className="button button-primary" href="#workbench">View current projects <ArrowRight size={17} /></a></div>
@@ -116,7 +140,7 @@ export default function Opportunities({ data, live, apiError, accessKey }: { dat
         <AnimatePresence mode="wait"><motion.div key={tab} initial={reduce ? undefined : { opacity: 0, y: 7 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0, y: -7 }} transition={{ duration: .18 }} className="tab-content">
           {tab === 'overview' && <><MapPanel projects={detail.projects} compact /><div className="opportunity-notes"><div><Clock3 size={18} /><strong>Timing relationship</strong><p>{String(detail.temporal_relationship.status ?? detail.temporal_relationship.type ?? 'Unknown').replaceAll('_', ' ')} · {detail.temporal_strength.replaceAll('_', ' ')}</p></div><div><Layers3 size={18} /><strong>Possible coordination areas</strong><p>{detail.possible_coordination_areas.join(', ')}</p></div></div><div className="notice neutral"><ShieldAlert size={17} /> Possible coordination areas are screening leads. Feasibility and economics require project-specific review.</div></>}
           {tab === 'evidence' && <Evidence opportunity={detail} />}
-          {tab === 'ledger' && <><LedgerView ledger={ledger} error={ledgerError} /><form className="decision-form" onSubmit={decide}><h3>Record a manager decision</h3><p>Each action captures this analysis and both project versions.</p><div className="form-grid two"><label>Action<select value={action} onChange={e => setAction(e.target.value)}>{actions.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label>Manager ID<input required value={actor} onChange={e => setActor(e.target.value)} placeholder="Authenticated user ID" /></label></div><label>Reason<textarea required value={reason} onChange={e => setReason(e.target.value)} placeholder="State why this action is appropriate…" /></label><p className="form-footnote">Actor identity is client asserted until individual sign-in is connected.</p>{!accessKey && <div className="notice caution">Connect reviewer access in the header before recording a decision.</div>}{decisionError && <div className="notice error" role="alert">{decisionError}</div>}{decisionSuccess && <div className="notice success" role="status">{decisionSuccess}</div>}<button type="submit" className="button button-primary" disabled={!accessKey}>Record decision <ArrowRight size={17} /></button></form></>}
+          {tab === 'ledger' && <><LedgerView ledger={ledger} error={ledgerError} /><section className="audit-export-card"><div className="audit-export-icon"><FileDown size={22} /></div><div className="audit-export-copy"><span className="detail-kicker">IMMUTABLE SNAPSHOT</span><h3>Export Audit PDF</h3><p>Save the projects, map evidence, source appendix, manager decision, and append-only trail exactly as reviewed.</p><label>Exporter / reviewer ID<input value={auditActor} onChange={event => setAuditActor(event.target.value)} placeholder="Authenticated user ID" /></label>{auditError && <div className="notice error" role="alert">{auditError}</div>}{auditSuccess && <div className="notice success" role="status"><strong>Audit {auditSuccess.auditId}</strong><span>PDF SHA-256: {auditSuccess.pdfHash || 'recorded in the ledger'}</span></div>}<button type="button" className="button button-secondary" onClick={downloadAudit} disabled={!accessKey || !auditActor.trim() || auditBusy}>{auditBusy ? <><LoaderCircle className="spin" size={17} /> Generating audit…</> : <>Export Audit PDF <FileDown size={17} /></>}</button>{!accessKey && <small>Connect reviewer access in the header before exporting.</small>}</div></section><form className="decision-form" onSubmit={decide}><h3>Record a manager decision</h3><p>Each action captures this analysis and both project versions.</p><div className="form-grid two"><label>Action<select value={action} onChange={e => setAction(e.target.value)}>{actions.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label>Manager ID<input required value={actor} onChange={e => setActor(e.target.value)} placeholder="Authenticated user ID" /></label></div><label>Reason<textarea required value={reason} onChange={e => setReason(e.target.value)} placeholder="State why this action is appropriate…" /></label><p className="form-footnote">Actor identity is client asserted until individual sign-in is connected.</p>{!accessKey && <div className="notice caution">Connect reviewer access in the header before recording a decision.</div>}{decisionError && <div className="notice error" role="alert">{decisionError}</div>}{decisionSuccess && <div className="notice success" role="status">{decisionSuccess}</div>}<button type="submit" className="button button-primary" disabled={!accessKey}>Record decision <ArrowRight size={17} /></button></form></>}
         </motion.div></AnimatePresence></> : <div className="empty-state"><Layers3 size={30} /><strong>Loading opportunity</strong><span>Fetching the current analysis snapshot.</span></div>}</section>
     </div>}
   </main>

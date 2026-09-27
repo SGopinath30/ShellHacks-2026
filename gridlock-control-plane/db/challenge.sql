@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS synchro.decision_ledger (
     event_type text NOT NULL CHECK (event_type IN (
         'UNDER_REVIEW', 'NEEDS_MORE_DATA', 'APPROVE_COORDINATION',
         'PROPOSE_COORDINATED_PLAN', 'DISMISS', 'REASON_UPDATED',
-        'OPPORTUNITY_CREATED', 'OPPORTUNITY_RECOMPUTED', 'PROJECT_VERSION_CHANGED'
+        'OPPORTUNITY_CREATED', 'OPPORTUNITY_RECOMPUTED', 'PROJECT_VERSION_CHANGED',
+        'AUDIT_EXPORTED'
     )),
     actor_id text NOT NULL,
     actor_role text NOT NULL,
@@ -50,6 +51,13 @@ CREATE TABLE IF NOT EXISTS synchro.decision_ledger (
     idempotency_key text,
     UNIQUE (pair_id, idempotency_key)
 );
+ALTER TABLE synchro.decision_ledger DROP CONSTRAINT IF EXISTS decision_ledger_event_type_check;
+ALTER TABLE synchro.decision_ledger ADD CONSTRAINT decision_ledger_event_type_check CHECK (event_type IN (
+    'UNDER_REVIEW', 'NEEDS_MORE_DATA', 'APPROVE_COORDINATION',
+    'PROPOSE_COORDINATED_PLAN', 'DISMISS', 'REASON_UPDATED',
+    'OPPORTUNITY_CREATED', 'OPPORTUNITY_RECOMPUTED', 'PROJECT_VERSION_CHANGED',
+    'AUDIT_EXPORTED'
+));
 CREATE INDEX IF NOT EXISTS decision_ledger_pair_time
     ON synchro.decision_ledger (pair_id, occurred_at DESC, event_id DESC);
 CREATE OR REPLACE FUNCTION synchro.prevent_decision_ledger_mutation()

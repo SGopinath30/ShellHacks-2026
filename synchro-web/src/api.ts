@@ -79,3 +79,37 @@ export const postDecision = (pairId: string, input: {
 }, key: string) => api<LedgerEvent>(`/opportunities/${encodeURIComponent(pairId)}/decisions`, {
   method: 'POST', body: JSON.stringify(input), ...authorized(key),
 })
+
+export type AuditDownload = {
+  blob: Blob
+  filename: string
+  auditId: string
+  snapshotSha256: string
+  pdfSha256: string
+}
+
+export async function exportAuditPdf(pairId: string, actorId: string, key: string): Promise<AuditDownload> {
+  const response = await fetch(`${base}/api/v1/opportunities/${encodeURIComponent(pairId)}/audit-pdf`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(key ? { 'X-API-Key': key } : {}) },
+    body: JSON.stringify({ actor_id: actorId, actor_role: 'Regional Transmission Planning Manager' }),
+  })
+  if (!response.ok) {
+    let detail = `Audit export failed (${response.status}).`
+    try {
+      const body = await response.json()
+      if (typeof body.detail === 'string') detail = body.detail
+    } catch { /* Keep the status message. */ }
+    throw new ApiError(response.status, detail)
+  }
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1]
+    ?? `SYNCHRO_Audit_${pairId}_${new Date().toISOString().slice(0, 10)}.pdf`
+  return {
+    blob: await response.blob(),
+    filename,
+    auditId: response.headers.get('X-SYNCHRO-Audit-ID') ?? 'Recorded in Decision Ledger',
+    snapshotSha256: response.headers.get('X-SYNCHRO-Snapshot-SHA256') ?? '',
+    pdfSha256: response.headers.get('X-SYNCHRO-PDF-SHA256') ?? '',
+  }
+}

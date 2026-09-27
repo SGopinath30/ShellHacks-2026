@@ -29,6 +29,7 @@ The committed `data/fixtures/starter_projects.json` and `starter_overlaps.json` 
 - `GET /api/v1/opportunities/{pair_id}`: both source records, distance provenance, closest points, tier, temporal relationship, and active configuration.
 - `POST /api/v1/opportunities/{pair_id}/decisions`: append a manager decision with the exact opportunity snapshot. Requires the `decision_context_hash` from opportunity detail and a reason.
 - `GET /api/v1/opportunities/{pair_id}/decision-ledger`: current review status and immutable event history.
+- `POST /api/v1/opportunities/{pair_id}/audit-pdf`: download a hashed audit snapshot and append the export event.
 - `POST /api/v1/opportunities/{pair_id}/decisions/{event_id}/reason`: append an old/new reason correction while retaining the original decision.
 - `GET /api/v1/location-workbench`: read-only Excluded Projects page with source review, pair assessment, and qualified pair results.
 - `GET /api/v1/location-review-queue`, `GET /api/v1/pair-assessments`, `GET /api/v1/qualified-pairs`: explain project readiness and find source-backed DESC–Georgia Power pairs.

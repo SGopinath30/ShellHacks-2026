@@ -24,6 +24,8 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition", "X-SYNCHRO-Audit-ID", "X-SYNCHRO-Generated-At",
+                    "X-SYNCHRO-Snapshot-SHA256", "X-SYNCHRO-PDF-SHA256"],
 )
 
 @app.middleware("http")
