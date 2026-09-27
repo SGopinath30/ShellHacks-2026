@@ -9,7 +9,11 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent
 SOURCE_BACKED = OUT / "source_backed_needs_review"
 FIXTURES = OUT / "starter_fixtures"
-STARTER = next((ROOT / "data" / "live" / "fixtures").glob("PKG-*/"))
+local_fixtures = ROOT / "data" / "live" / "fixtures"
+if not local_fixtures.exists():
+    # Existing checkouts may retain the gitignored data/ directory at repo root.
+    local_fixtures = ROOT.parent / "data" / "live" / "fixtures"
+STARTER = next(local_fixtures.glob("PKG-*/"))
 
 
 def write(path, value):
