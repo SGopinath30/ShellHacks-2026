@@ -1,0 +1,488 @@
+[
+  {
+    "project_id": "DESC_1",
+    "utility_id": "Dominion Energy South Carolina",
+    "project_name": "Stevens Creek - Hooks 115 kV / LR Plumb Branch 46 kV Rebuilds",
+    "project_type": "rebuild",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "Stevens Creek - Hooks 115 kV / LR Plumb Branch 46 kV Rebuilds",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -82.051362,
+        33.562599
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -82.051362,
+        33.562599
+      ]
+    },
+    "geometry_origin": "SINGLE_LOCATED_POINT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2024-12-31"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 2",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  },
+  {
+    "project_id": "DESC_2",
+    "utility_id": "Dominion Energy South Carolina",
+    "project_name": "Hooks - Thurmond 115 kV Tie: Rebuild",
+    "project_type": "rebuild",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "Hooks - Thurmond 115 kV Tie: Rebuild",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -82.195931,
+        33.660127
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -82.195931,
+        33.660127
+      ]
+    },
+    "geometry_origin": "SINGLE_LOCATED_POINT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2024-12-31"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 3",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  },
+  {
+    "project_id": "DESC_3",
+    "utility_id": "Dominion Energy South Carolina",
+    "project_name": "Jasper - Okatie 230 kV #2: Construct",
+    "project_type": "transmission_line",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "Jasper - Okatie 230 kV #2: Construct",
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -81.1246,
+          32.35912
+        ],
+        [
+          -81.032495,
+          32.333758
+        ]
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -81.0785475,
+        32.346439000000004
+      ]
+    },
+    "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2025-12-31"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 4",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  },
+  {
+    "project_id": "DESC_4",
+    "utility_id": "Dominion Energy South Carolina",
+    "project_name": "Queensboro - Ft Johnson 115 kV & Queensboro-Bayfront 115 kV (Queensboro-James Island Sect)",
+    "project_type": "transmission_line",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "Queensboro - Ft Johnson 115 kV & Queensboro-Bayfront 115 kV (Queensboro-James Island Sect)",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -79.967332,
+        32.722793
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -79.967332,
+        32.722793
+      ]
+    },
+    "geometry_origin": "SINGLE_LOCATED_POINT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2023-12-31"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 5",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  },
+  {
+    "project_id": "DESC_5",
+    "utility_id": "Dominion Energy South Carolina",
+    "project_name": "Okatie-Bluffton 115 kV: Rebuild",
+    "project_type": "rebuild",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "Okatie-Bluffton 115 kV: Rebuild",
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -81.032495,
+          32.333758
+        ],
+        [
+          -80.853384,
+          32.235027
+        ]
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -80.9429395,
+        32.2843925
+      ]
+    },
+    "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2025-06-01"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 6",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  },
+  {
+    "project_id": "GPC_1",
+    "utility_id": "Georgia Power",
+    "project_name": "EVANS PRIMARY - THURMOND DAM (USA) #5 115KV REBUILD",
+    "project_type": "rebuild",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "EVANS PRIMARY - THURMOND DAM (USA) #5 115KV REBUILD",
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -82.168648,
+          33.543994
+        ],
+        [
+          -82.195931,
+          33.660127
+        ]
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -82.1822895,
+        33.6020605
+      ]
+    },
+    "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2033-06-01"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 7",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  },
+  {
+    "project_id": "GPC_2",
+    "utility_id": "Georgia Power",
+    "project_name": "SAV: MCINTOSH - PURRYSBURG 230KV REACTORS",
+    "project_type": "substation",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "SAV: MCINTOSH - PURRYSBURG 230KV REACTORS",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -81.175112,
+        32.352116
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -81.175112,
+        32.352116
+      ]
+    },
+    "geometry_origin": "SINGLE_LOCATED_POINT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2026-06-01"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 8",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  },
+  {
+    "project_id": "GPC_3",
+    "utility_id": "Georgia Power",
+    "project_name": "SAV: GOSHEN (SAV) - MCINTOSH 115KV LINE REBUILD",
+    "project_type": "rebuild",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "SAV: GOSHEN (SAV) - MCINTOSH 115KV LINE REBUILD",
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -81.209472,
+          32.248701
+        ],
+        [
+          -81.182105,
+          32.352116
+        ]
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -81.1957885,
+        32.3004085
+      ]
+    },
+    "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2027-06-01"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 9",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  },
+  {
+    "project_id": "GPC_4",
+    "utility_id": "Georgia Power",
+    "project_name": "MITCHELL - NORTH TIFTON 230KV RECONDUCTOR",
+    "project_type": "rebuild",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "MITCHELL - NORTH TIFTON 230KV RECONDUCTOR",
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -84.133843,
+          31.447121
+        ],
+        [
+          -83.54913,
+          31.478089
+        ]
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -83.8414865,
+        31.462605
+      ]
+    },
+    "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2025-05-01"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 10",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  },
+  {
+    "project_id": "GPC_5",
+    "utility_id": "Georgia Power",
+    "project_name": "JESUP - LUDOWICI PRIMARY 115KV REBUILD",
+    "project_type": "rebuild",
+    "status": "unknown",
+    "voltage_kv": null,
+    "location_text": "JESUP - LUDOWICI PRIMARY 115KV REBUILD",
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -81.924947,
+          31.603106
+        ],
+        [
+          -81.743703,
+          31.721597
+        ]
+      ]
+    },
+    "center_point": {
+      "type": "Point",
+      "coordinates": [
+        -81.834325,
+        31.6623515
+      ]
+    },
+    "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+    "geometry_quality": "APPROXIMATE",
+    "validation_state": "NEEDS_REVIEW",
+    "source_crs": "EPSG:4326",
+    "schedule": {
+      "type": "IN_SERVICE_GAP",
+      "in_service_date": "2025-06-01"
+    },
+    "evidence": [
+      {
+        "source_id": "organizer-starter-workbook",
+        "source_name": "Projects_Overlaps.xlsx",
+        "page_or_row": "projects row 11",
+        "snippet": null,
+        "source_url": null
+      }
+    ],
+    "source_version_ids": [],
+    "is_fixture": true,
+    "extraction_confidence": null,
+    "extraction_model": null,
+    "extraction_model_version": null
+  }
+]
