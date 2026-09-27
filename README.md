@@ -1,9 +1,16 @@
 # Synchro
-Turns fragmented utility construction plans into an explainable geospatial timeline, using AI for document extraction and deterministic spatial + schedule matching to surface cross-utility coordination opportunities.
+
+Turns fragmented utility construction plans into an explainable geospatial timeline, using AI for document extraction and deterministic spatial and schedule matching to surface cross-utility coordination opportunities.
+
+Backend work is organized by owner:
+
+- `Tarun/` — project intelligence, evidence validation, extraction, and Nemotron integration.
+- `gridlock-control-plane/` — Kevin's deterministic opportunity and control-plane service.
+- `ingestion/` — Dell's source ingestion and unverified candidate handoff.
 
 ## Dell ingestion v0
 
-Work lives on the `badri` branch. Dell preserves public evidence and discovers **unverified** geometry candidates. Mac validates project associations; ASUS calculates overlap. This package contains no AI extraction, overlap engine, or frontend.
+Dell preserves public evidence and discovers **unverified** geometry candidates. Mac validates project associations; ASUS calculates overlap. The Dell ingestion package contains no AI extraction, overlap engine, or frontend.
 
 ### Run the offline demo
 

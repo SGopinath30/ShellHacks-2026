@@ -1,3 +1,4 @@
+.DS_Store
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -211,6 +212,13 @@ tempCodeRunnerFile.py
 
 # PyPI configuration file
 .pypirc
+
+# Local model request/response diagnostics
+.diagnostics/
+
+# Local acquired evidence, derived artifacts, and SQLite state (may be large)
+/data/
+/Tarun/data/
 
 # Marimo
 marimo/_static/

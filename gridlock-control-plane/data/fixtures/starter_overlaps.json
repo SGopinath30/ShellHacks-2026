@@ -1,0 +1,38 @@
+[
+  {
+    "project_a": "DESC_2",
+    "project_b": "GPC_1",
+    "organizer_distance_miles": 4.09,
+    "organizer_gap_days": 3074
+  },
+  {
+    "project_a": "DESC_3",
+    "project_b": "GPC_2",
+    "organizer_distance_miles": 5.65,
+    "organizer_gap_days": 152
+  },
+  {
+    "project_a": "DESC_3",
+    "project_b": "GPC_3",
+    "organizer_distance_miles": 7.55,
+    "organizer_gap_days": 517
+  },
+  {
+    "project_a": "DESC_1",
+    "project_b": "GPC_1",
+    "organizer_distance_miles": 8.01,
+    "organizer_gap_days": 3074
+  },
+  {
+    "project_a": "DESC_5",
+    "project_b": "GPC_2",
+    "organizer_distance_miles": 14.34,
+    "organizer_gap_days": 365
+  },
+  {
+    "project_a": "DESC_5",
+    "project_b": "GPC_3",
+    "organizer_distance_miles": 14.81,
+    "organizer_gap_days": 730
+  }
+]
