@@ -3,6 +3,7 @@ import { ArrowRight, CircleCheck, Compass, FileClock, Layers3, MapPin, ShieldChe
 import { motion, useReducedMotion } from 'motion/react'
 import MapPanel from './MapPanel'
 import type { Project, QualifiedPairs, ReviewQueue } from './types'
+import { formatMiles } from './utils'
 
 const stages = [
   { number: '01', title: 'Detect', icon: Compass, copy: 'Find cross-utility projects inside a measured spatial threshold.' },
@@ -69,7 +70,7 @@ export default function Landing({ projects, queue, pairs, live, loading }: {
       </section>
 
       <section className="metric-ribbon"><div className="content-width ribbon-inner">
-        <div><strong>{live ? `< ${pairs.maximum_meters / 1000} km` : '—'}</strong><span>API spatial filter</span></div>
+        <div><strong>{live ? `< ${formatMiles(pairs.maximum_meters, 1)} mi` : '—'}</strong><span>API spatial filter</span></div>
         <div><strong>{loading ? '—' : projects.filter(project => !project.is_fixture).length}</strong><span>Current source records</span></div>
         <div><strong>{live ? queue.total : '—'}</strong><span>Locations needing review</span></div>
         <div><strong>{live ? pairs.total : '—'}</strong><span>Qualified opportunities</span></div>

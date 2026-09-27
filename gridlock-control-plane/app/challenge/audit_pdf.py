@@ -339,7 +339,7 @@ def render(payload, snapshot_sha256: str) -> bytes:
     story.append(summary_table)
     story.append(_paragraph("Key findings", styles["h2"]))
     findings = [
-        f"Measured separation: {float(distance.get('meters', 0)) / 1000:.2f} km ({float(distance.get('display_miles', 0)):.2f} miles) using {_label(distance.get('method', 'UNKNOWN'))}.",
+        f"Measured separation: {float(distance.get('meters', 0)) / 1609.344:.2f} miles using {_label(distance.get('method', 'UNKNOWN'))}.",
         f"Spatial tier: {_label(opportunity.get('tier', 'UNKNOWN'))}.",
         f"Timing: {_label((opportunity.get('temporal_relationship') or {}).get('status') or (opportunity.get('temporal_relationship') or {}).get('type') or 'UNKNOWN')}.",
         "Possible coordination areas: " + ", ".join(opportunity.get("possible_coordination_areas") or ["None recorded"]),
@@ -380,14 +380,14 @@ def render(payload, snapshot_sha256: str) -> bytes:
     else:
         usability = "NOT USABLE - required geometry or distance evidence is missing."
     story.append(_field_table([
-        ("Measured distance", f"{float(distance.get('meters', 0)) / 1000:.2f} km / {float(distance.get('display_miles', 0)):.2f} miles"),
+        ("Measured distance", f"{float(distance.get('meters', 0)) / 1609.344:.2f} miles"),
         ("Measurement method", _label(distance.get("method", "UNKNOWN"))),
         ("Distance usability", usability),
         ("Engine version", distance.get("engine_version", "Not recorded")),
         ("Geometry confidence", distance.get("geometry_quality", "Not recorded")),
     ], styles))
     story.append(Spacer(1, 13))
-    story.append(MapEvidence(projects, f"{float(distance.get('meters', 0)) / 1000:.2f} km"))
+    story.append(MapEvidence(projects, f"{float(distance.get('meters', 0)) / 1609.344:.2f} mi"))
     story.append(Spacer(1, 10))
     story.append(_paragraph("Geometry warnings", styles["h2"]))
     for warning in warnings or ["No geometry warning was recorded in this opportunity snapshot."]:

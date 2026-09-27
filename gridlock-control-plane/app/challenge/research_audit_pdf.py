@@ -186,14 +186,14 @@ def render(payload, snapshot_sha256: str) -> bytes:
     displacement = _distance_meters(project.get("geometry"), proposed_geometry)
     if proposed_geometry:
         plotted.append({**project, "project_name": "Proposed research location", "geometry": proposed_geometry})
-    distance_text = (f"{displacement / 1000:.2f} km change" if displacement is not None
+    distance_text = (f"{displacement / 1609.344:.2f} mi change" if displacement is not None
                      else "No measurable location change")
     story.append(MapEvidence(plotted, distance_text))
     story.append(Spacer(1, 10))
     story.append(_field_table([
         ("Stored geometry", str(project.get("geometry") or "Not supplied")),
         ("Proposed geometry", str(proposed_geometry or "No geometry proposal")),
-        ("Measured displacement", f"{displacement / 1000:.3f} km" if displacement is not None else "Not calculable"),
+        ("Measured displacement", f"{displacement / 1609.344:.3f} miles" if displacement is not None else "Not calculable"),
         ("Distance usability", "Project-change comparison only; this is not an inter-project opportunity distance."),
         ("Geometry origin", project.get("geometry_origin", "UNKNOWN")),
         ("Geometry quality", project.get("geometry_quality", "UNKNOWN")),

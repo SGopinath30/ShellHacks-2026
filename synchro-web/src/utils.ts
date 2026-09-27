@@ -7,3 +7,7 @@ export function safeSourceUrl(value: string | null | undefined): string | null {
     return null
   }
 }
+
+export function formatMiles(meters: number, digits = 2): string {
+  return (meters / 1609.344).toFixed(digits)
+}
