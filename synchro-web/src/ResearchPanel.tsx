@@ -178,7 +178,7 @@ export default function ResearchPanel({ project, accessKey, live, onSaved }: {
     {current && <div>
       <p><strong>{current.state}</strong> · Base version: {current.base_version_id}</p>
       {current.state === 'RUNNING' && <p role="status">Research is running. You may leave this page and return to the saved result.</p>}
-      {current.error && <p role="alert">{current.error}</p>}
+      {/* Provider failure details remain in the immutable audit PDF. */}
       {current.payload.summary && <p style={{ whiteSpace: 'pre-wrap' }}>{current.payload.summary}</p>}
       {!!current.payload.missing_evidence?.length && <div className="notice caution"><div><strong>Evidence still needed</strong><ul>{current.payload.missing_evidence.map((item, i) => <li key={i}>{item}</li>)}</ul></div></div>}
       {current.research.gis && <p>County GIS: {current.research.gis.state} — {current.research.gis.note} {safeSourceUrl(current.research.gis.source_url) && <a href={safeSourceUrl(current.research.gis.source_url)!} target="_blank" rel="noopener noreferrer">View GIS query</a>}</p>}
