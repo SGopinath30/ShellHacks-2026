@@ -1,0 +1,40 @@
+{
+  "project_id": "FIXTURE-GPC_4",
+  "utility_id": "GPC",
+  "project_name": "MITCHELL - NORTH TIFTON 230KV RECONDUCTOR",
+  "project_type": "other",
+  "status": "unknown",
+  "location_text": "Mitchell Substation to North Tifton Substation, GA (starter workbook; location unverified)",
+  "geometry": {
+    "coordinates": [
+      [
+        -84.133843,
+        31.447121
+      ],
+      [
+        -83.54913,
+        31.478089
+      ]
+    ],
+    "type": "LineString"
+  },
+  "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+  "geometry_quality": "APPROXIMATE",
+  "validation_state": "NEEDS_REVIEW",
+  "source_crs": "EPSG:4326",
+  "schedule": {
+    "type": "UNKNOWN"
+  },
+  "evidence": [
+    {
+      "source_id": "STARTER-PROJECTS",
+      "source_name": "Projects_Overlaps.xlsx (organizer starter workbook)",
+      "page_or_row": "projects row 10",
+      "snippet": "Starter project GPC_4: MITCHELL - NORTH TIFTON 230KV RECONDUCTOR; raw in-service date 2025-05-01T00:00:00. These are unverified fixture values."
+    }
+  ],
+  "source_version_ids": [
+    "SV-68b11dcd2e02f1aa798ca6b4"
+  ],
+  "is_fixture": true
+}

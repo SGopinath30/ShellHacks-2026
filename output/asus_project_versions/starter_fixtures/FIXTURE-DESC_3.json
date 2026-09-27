@@ -1,0 +1,41 @@
+{
+  "project_id": "FIXTURE-DESC_3",
+  "utility_id": "DESC",
+  "project_name": "Jasper - Okatie 230 kV #2: Construct",
+  "project_type": "other",
+  "status": "unknown",
+  "location_text": "Jasper Sub to Okatie Sub, SC (starter workbook; location unverified)",
+  "geometry": {
+    "coordinates": [
+      [
+        -81.1246,
+        32.35912
+      ],
+      [
+        -81.032495,
+        32.333758
+      ]
+    ],
+    "type": "LineString"
+  },
+  "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+  "geometry_quality": "APPROXIMATE",
+  "validation_state": "NEEDS_REVIEW",
+  "source_crs": "EPSG:4326",
+  "schedule": {
+    "type": "IN_SERVICE_GAP",
+    "in_service_date": "2025-12-31"
+  },
+  "evidence": [
+    {
+      "source_id": "STARTER-PROJECTS",
+      "source_name": "Projects_Overlaps.xlsx (organizer starter workbook)",
+      "page_or_row": "projects row 4",
+      "snippet": "Starter project DESC_3: Jasper - Okatie 230 kV #2: Construct; raw in-service date 12/31/2025. These are unverified fixture values."
+    }
+  ],
+  "source_version_ids": [
+    "SV-68b11dcd2e02f1aa798ca6b4"
+  ],
+  "is_fixture": true
+}

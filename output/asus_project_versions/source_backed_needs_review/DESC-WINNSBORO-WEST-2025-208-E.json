@@ -1,0 +1,46 @@
+{
+  "project_id": "DESC-WINNSBORO-WEST-2025-208-E",
+  "utility_id": "DESC",
+  "project_name": "Winnsboro West 230/115 kV Substation",
+  "project_type": "substation",
+  "status": "in_progress",
+  "voltage_kv": 230,
+  "location_text": "Winnsboro West, Fairfield County, South Carolina; exact substation parcel requires georeferencing from DESC Exhibit B",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -81.088056,
+      34.376944
+    ]
+  },
+  "geometry_origin": "CENTER_POINT",
+  "geometry_quality": "UNRESOLVED",
+  "validation_state": "NEEDS_REVIEW",
+  "source_crs": "EPSG:4326",
+  "schedule": {
+    "type": "UNKNOWN"
+  },
+  "evidence": [
+    {
+      "source_id": "SCPSC-2025-208-E-2026-08-14",
+      "source_name": "DESC quarterly update, SCPSC Docket 2025-208-E",
+      "source_url": "https://dms.psc.sc.gov/Attachments/Matter/72042102-313d-484f-b112-50ba66742d92",
+      "page_or_row": "page 1",
+      "snippet": "DESC has started clearing and grading for the Winnsboro West Substation. Projected completion is January 1, 2028."
+    },
+    {
+      "source_id": "SCPSC-2025-208-E-EXHIBIT-B",
+      "source_name": "DESC Exhibits A and B, SCPSC Docket 2025-208-E",
+      "source_url": "https://dms.psc.sc.gov/Attachments/Matter/bed0f283-a5b8-4c56-9c36-202d635a503c",
+      "page_or_row": "page 3, Exhibit B",
+      "snippet": "Exhibit B depicts Winnsboro West; coordinates in this JSON are a Winnsboro town reference point, not the substation site."
+    },
+    {
+      "source_id": "WIKIDATA-Q2317192",
+      "source_name": "Wikidata Winnsboro town coordinate, citing US Census Gazetteer",
+      "source_url": "https://www.wikidata.org/wiki/Q2317192",
+      "snippet": "Town reference coordinate only; it does not locate the Winnsboro West substation."
+    }
+  ],
+  "is_fixture": false
+}

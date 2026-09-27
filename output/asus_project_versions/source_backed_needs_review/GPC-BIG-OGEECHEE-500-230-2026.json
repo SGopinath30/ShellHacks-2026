@@ -1,0 +1,42 @@
+{
+  "project_id": "GPC-BIG-OGEECHEE-500-230-2026",
+  "utility_id": "GPC",
+  "project_name": "Big Ogeechee 500/230 kV Substation",
+  "project_type": "substation",
+  "status": "unknown",
+  "voltage_kv": 500,
+  "location_text": "West Chatham County, Georgia, near Little Ogeechee Substation; exact Big Ogeechee site requires confirmation",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -81.25315,
+      32.00679
+    ]
+  },
+  "geometry_origin": "CENTER_POINT",
+  "geometry_quality": "UNRESOLVED",
+  "validation_state": "NEEDS_REVIEW",
+  "source_crs": "EPSG:4326",
+  "schedule": {
+    "type": "UNKNOWN"
+  },
+  "evidence": [
+    {
+      "source_id": "GPC-BIG-OGEECHEE-2026-06-17",
+      "source_name": "Georgia Power Big Ogeechee project update",
+      "source_url": "https://www.georgiapower.com/news-hub/community/big-ogeechee-substation-power-savannah-area-growth-storm-hardened-coastal-grid.html",
+      "snippet": "Georgia Power describes Big Ogeechee in West Chatham County and expected it to come online in summer 2026; current service status needs confirmation."
+    },
+    {
+      "source_id": "OSM-GPC-savannah",
+      "source_name": "OpenStreetMap Little Ogeechee Substation, way 121701191",
+      "source_url": "https://www.openstreetmap.org/way/121701191",
+      "page_or_row": "way 121701191",
+      "snippet": "Point is the nearby Little Ogeechee Substation reference location, not a surveyed Big Ogeechee location."
+    }
+  ],
+  "source_version_ids": [
+    "SV-77849dfbe8c38c861c0776f2"
+  ],
+  "is_fixture": false
+}

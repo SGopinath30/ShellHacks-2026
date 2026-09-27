@@ -1,0 +1,40 @@
+{
+  "project_id": "FIXTURE-DESC_5",
+  "utility_id": "DESC",
+  "project_name": "Okatie-Bluffton 115 kV: Rebuild",
+  "project_type": "rebuild",
+  "status": "unknown",
+  "location_text": "Okatie Sub to Bluffton Sub, SC (starter workbook; location unverified)",
+  "geometry": {
+    "coordinates": [
+      [
+        -81.032495,
+        32.333758
+      ],
+      [
+        -80.853384,
+        32.235027
+      ]
+    ],
+    "type": "LineString"
+  },
+  "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+  "geometry_quality": "APPROXIMATE",
+  "validation_state": "NEEDS_REVIEW",
+  "source_crs": "EPSG:4326",
+  "schedule": {
+    "type": "UNKNOWN"
+  },
+  "evidence": [
+    {
+      "source_id": "STARTER-PROJECTS",
+      "source_name": "Projects_Overlaps.xlsx (organizer starter workbook)",
+      "page_or_row": "projects row 6",
+      "snippet": "Starter project DESC_5: Okatie-Bluffton 115 kV: Rebuild; raw in-service date 2025-06-01T00:00:00. These are unverified fixture values."
+    }
+  ],
+  "source_version_ids": [
+    "SV-68b11dcd2e02f1aa798ca6b4"
+  ],
+  "is_fixture": true
+}

@@ -1,0 +1,35 @@
+{
+  "project_id": "FIXTURE-DESC_4",
+  "utility_id": "DESC",
+  "project_name": "Queensboro - Ft Johnson 115 kV & Queensboro-Bayfront 115 kV (Queensboro-James Island Sect)",
+  "project_type": "other",
+  "status": "unknown",
+  "location_text": "Queensboro Sub to Ft Johnson Sub, SC (starter workbook; location unverified)",
+  "geometry": {
+    "coordinates": [
+      -79.967332,
+      32.722793
+    ],
+    "type": "Point"
+  },
+  "geometry_origin": "SINGLE_LOCATED_POINT",
+  "geometry_quality": "APPROXIMATE",
+  "validation_state": "NEEDS_REVIEW",
+  "source_crs": "EPSG:4326",
+  "schedule": {
+    "type": "IN_SERVICE_GAP",
+    "in_service_date": "2023-12-31"
+  },
+  "evidence": [
+    {
+      "source_id": "STARTER-PROJECTS",
+      "source_name": "Projects_Overlaps.xlsx (organizer starter workbook)",
+      "page_or_row": "projects row 5",
+      "snippet": "Starter project DESC_4: Queensboro - Ft Johnson 115 kV & Queensboro-Bayfront 115 kV (Queensboro-James Island Sect); raw in-service date 12/31/2023. These are unverified fixture values."
+    }
+  ],
+  "source_version_ids": [
+    "SV-68b11dcd2e02f1aa798ca6b4"
+  ],
+  "is_fixture": true
+}

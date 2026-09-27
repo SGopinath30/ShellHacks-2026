@@ -1,0 +1,41 @@
+{
+  "project_id": "FIXTURE-GPC_3",
+  "utility_id": "GPC",
+  "project_name": "SAV: GOSHEN (SAV) - MCINTOSH 115KV LINE REBUILD",
+  "project_type": "rebuild",
+  "status": "unknown",
+  "location_text": "GOSHEN to MCINTOSH, GA (starter workbook; location unverified)",
+  "geometry": {
+    "coordinates": [
+      [
+        -81.209472,
+        32.248701
+      ],
+      [
+        -81.182105,
+        32.352116
+      ]
+    ],
+    "type": "LineString"
+  },
+  "geometry_origin": "TWO_ENDPOINT_SEGMENT",
+  "geometry_quality": "APPROXIMATE",
+  "validation_state": "NEEDS_REVIEW",
+  "source_crs": "EPSG:4326",
+  "schedule": {
+    "type": "IN_SERVICE_GAP",
+    "in_service_date": "2027-06-01"
+  },
+  "evidence": [
+    {
+      "source_id": "STARTER-PROJECTS",
+      "source_name": "Projects_Overlaps.xlsx (organizer starter workbook)",
+      "page_or_row": "projects row 9",
+      "snippet": "Starter project GPC_3: SAV: GOSHEN (SAV) - MCINTOSH 115KV LINE REBUILD; raw in-service date 6/1/2027. These are unverified fixture values."
+    }
+  ],
+  "source_version_ids": [
+    "SV-68b11dcd2e02f1aa798ca6b4"
+  ],
+  "is_fixture": true
+}
